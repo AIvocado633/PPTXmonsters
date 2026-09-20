@@ -27,6 +27,18 @@ The start menu and the navigation around it are in place. Gameplay is not.
 flutter run
 ```
 
+On Windows there is also a script that builds a standalone copy and starts it,
+the way a player would launch the game rather than a developer:
+
+```bat
+run-windows.bat
+```
+
+With no argument it makes a release build; pass `debug` or `profile` for the
+other configurations. Double-clicking it works, and the game keeps running
+after the console window closes. For a hot-reload loop use `flutter run -d
+windows` instead.
+
 Android, iOS and Windows are configured.
 
 The game is **landscape only**. The layout is a 16:9 slide, letterboxed onto
