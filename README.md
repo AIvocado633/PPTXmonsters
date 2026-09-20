@@ -1,2 +1,4 @@
 # PPTXmonsters
-This is a mobile app for users wanting to defeat all powerpoint features.
+This is a 2D mobile game for users wanting to defeat all powerpoint features.
+
+Software stack: Flutter, Dart, Flame Engine
