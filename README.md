@@ -10,16 +10,28 @@ Built with Flutter and the [Flame](https://flame-engine.org) engine.
 
 ## Status
 
-The start menu and the navigation around it are in place. Gameplay is not.
+Slide 1 is playable end to end. The other five bosses are named but not built.
 
 - **Start menu** — a title slide in PowerPoint's normal editing view, with
   ribbon, status bar, dashed placeholders and staggered "Fly In" entrances.
 - **Slide sorter** — level select, showing the six bosses; only the first is
   unlocked.
-- **Slide show** — the arena, staged but not playable: it sets up the top-down
-  framing, the projector-black surround and the actors. Movement and combat go
-  here next.
+- **Slide show** — the AutoFit fight. Move with the stick or WASD, shoot bullet
+  points with the button or Space, and shrink the feature out of the deck
+  before it shrinks you.
 - **Design Ideas** — a settings pane with nothing wired up yet.
+
+### How the AutoFit fight works
+
+AutoFit shrinks whatever does not fit, so the fight turns that on both sides.
+Every hit the boss lands makes the player smaller; every bullet point that
+lands steps the boss down the same ladder of point sizes PowerPoint walks when
+AutoFit kicks in, from 54 pt to nothing. Whoever runs out of size first loses
+the slide.
+
+Shrinking is not purely a punishment. A smaller player is quicker and a
+narrower target, and can squeeze closer to the walls — the trade is that you
+have less room left to lose.
 
 ## Running it
 

@@ -9,6 +9,8 @@ import 'package:pptx_monsters/game/pptx_monsters_game.dart';
 import 'package:pptx_monsters/game/routes.dart';
 import 'package:pptx_monsters/game/slide/slide_metrics.dart';
 
+import 'arena_harness.dart';
+
 void main() {
   group('start menu', () {
     testWithGame<PptxMonstersGame>(
@@ -63,9 +65,7 @@ void main() {
       (game) async {
         await game.ready();
         // Three seconds is comfortably past the last staggered fly-in.
-        for (var frame = 0; frame < 180; frame++) {
-          game.update(1 / 60);
-        }
+        advance(game, 3);
         await game.ready();
 
         final buttons = game.descendants().whereType<MenuBulletButton>();
@@ -83,9 +83,7 @@ void main() {
       PptxMonstersGame.new,
       (game) async {
         await game.ready();
-        for (var frame = 0; frame < 180; frame++) {
-          game.update(1 / 60);
-        }
+        advance(game, 3);
         await game.ready();
 
         final page = game.descendants().whereType<MainMenuPage>().single;
