@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flame/game.dart';
+import 'package:flame/input.dart';
 
 import 'pages/arena_page.dart';
 import 'pages/design_ideas_page.dart';
@@ -14,7 +15,10 @@ import 'theme/palette.dart';
 /// Screens are Flame [Route]s rather than Flutter navigator pages, so the whole
 /// game lives inside a single `GameWidget` and transitions can be animated by
 /// the engine.
-class PptxMonstersGame extends FlameGame {
+///
+/// [HasKeyboardHandlerComponents] lets components opt into key events, which is
+/// what makes the game playable on desktop without a touch stick.
+class PptxMonstersGame extends FlameGame with HasKeyboardHandlerComponents {
   late final RouterComponent router;
 
   @override
