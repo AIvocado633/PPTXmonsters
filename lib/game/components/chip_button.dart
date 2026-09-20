@@ -1,0 +1,84 @@
+import 'dart:ui';
+
+import 'package:flame/components.dart';
+import 'package:flame/events.dart';
+
+import '../theme/palette.dart';
+import '../theme/slide_text.dart';
+
+/// A compact pill button, used for secondary actions such as going back to
+/// normal view. Styled after the buttons in PowerPoint's task panes.
+class ChipButton extends PositionComponent with TapCallbacks, HoverCallbacks {
+  ChipButton({
+    required this.label,
+    required this.onSelected,
+    this.filled = false,
+    super.position,
+    super.anchor,
+    double width = 240,
+    double height = 52,
+  }) : super(size: Vector2(width, height));
+
+  final String label;
+  final void Function() onSelected;
+
+  /// Filled buttons are the primary action on a page; outlined ones are not.
+  final bool filled;
+
+  bool _pressed = false;
+
+  final Paint _fillPaint = Paint();
+  final Paint _strokePaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.8;
+
+  @override
+  Future<void> onLoad() async {
+    await add(
+      TextComponent(
+        text: label,
+        textRenderer: filled ? SlideText.chipOnBrand : SlideText.chip,
+        position: size / 2,
+        anchor: Anchor.center,
+      ),
+    );
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final rrect = RRect.fromRectAndRadius(
+      size.toRect(),
+      Radius.circular(height / 2),
+    );
+    if (filled) {
+      _fillPaint.color = _pressed
+          ? Palette.brandDark
+          : (isHovered ? Palette.brandLight : Palette.brand);
+      canvas.drawRRect(rrect, _fillPaint);
+    } else {
+      if (isHovered || _pressed) {
+        _fillPaint.color = _pressed
+            ? Palette.brandWashStrong
+            : Palette.brandWash;
+        canvas.drawRRect(rrect, _fillPaint);
+      }
+      _strokePaint.color = Palette.brand;
+      canvas.drawRRect(rrect, _strokePaint);
+    }
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) => _pressed = true;
+
+  @override
+  void onTapUp(TapUpEvent event) {
+    if (!_pressed) {
+      return;
+    }
+    _pressed = false;
+    onSelected();
+  }
+
+  @override
+  void onTapCancel(TapCancelEvent event) => _pressed = false;
+}

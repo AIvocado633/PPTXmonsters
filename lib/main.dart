@@ -1,0 +1,45 @@
+import 'package:flame/flame.dart';
+import 'package:flame/game.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
+import 'game/pptx_monsters_game.dart';
+import 'game/theme/palette.dart';
+
+const Set<TargetPlatform> _mobile = {TargetPlatform.android, TargetPlatform.iOS};
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (_mobile.contains(defaultTargetPlatform)) {
+    // The game is laid out on a 16:9 slide, so it wants the screen the same way
+    // round as a projector. Orientation and system UI are mobile-only concerns;
+    // on desktop the window is already whatever shape the player made it.
+    await Flame.device.setLandscape();
+    await Flame.device.fullScreen();
+  }
+  runApp(const PptxMonstersApp());
+}
+
+class PptxMonstersApp extends StatelessWidget {
+  const PptxMonstersApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'PPTX Monsters',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Palette.brand,
+          brightness: Brightness.dark,
+        ),
+        scaffoldBackgroundColor: Palette.workspace,
+      ),
+      home: const Scaffold(
+        backgroundColor: Palette.workspace,
+        body: GameWidget.controlled(gameFactory: PptxMonstersGame.new),
+      ),
+    );
+  }
+}
