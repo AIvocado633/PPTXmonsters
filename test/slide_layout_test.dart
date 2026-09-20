@@ -9,6 +9,8 @@ import 'package:pptx_monsters/game/components/status_bar.dart';
 import 'package:pptx_monsters/game/pptx_monsters_game.dart';
 import 'package:pptx_monsters/game/routes.dart';
 import 'package:pptx_monsters/game/slide/slide_metrics.dart';
+
+import 'arena_harness.dart';
 import 'package:pptx_monsters/game/slide/slide_page.dart';
 
 /// Layout guard rails.
@@ -97,9 +99,7 @@ Future<SlidePage> settle(PptxMonstersGame game, String route) async {
     await game.ready();
   }
   // Three seconds is comfortably past the last staggered fly-in.
-  for (var frame = 0; frame < 180; frame++) {
-    game.update(1 / 60);
-  }
+  advance(game, 3);
   await game.ready();
 
   // The route below stays mounted, so take the page off the active route

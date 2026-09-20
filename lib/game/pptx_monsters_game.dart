@@ -18,7 +18,8 @@ import 'theme/palette.dart';
 ///
 /// [HasKeyboardHandlerComponents] lets components opt into key events, which is
 /// what makes the game playable on desktop without a touch stick.
-class PptxMonstersGame extends FlameGame with HasKeyboardHandlerComponents {
+class PptxMonstersGame extends FlameGame
+    with HasKeyboardHandlerComponents, HasCollisionDetection {
   late final RouterComponent router;
 
   @override
@@ -32,7 +33,9 @@ class PptxMonstersGame extends FlameGame with HasKeyboardHandlerComponents {
         routes: {
           Routes.normalView: Route(MainMenuPage.new),
           Routes.slideSorter: Route(SlideSorterPage.new),
-          Routes.slideShow: Route(ArenaPage.new),
+          // Not kept alive: re-entering a level should start a fresh fight,
+          // not drop you back into one you already won or lost.
+          Routes.slideShow: Route(ArenaPage.new, maintainState: false),
           Routes.designIdeas: Route(DesignIdeasPage.new),
         },
       ),

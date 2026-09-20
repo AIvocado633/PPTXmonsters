@@ -84,6 +84,15 @@ abstract final class SlideText {
     ),
   );
 
+  static final resultTitle = TextPaint(
+    style: _style(
+      size: 26,
+      weight: FontWeight.w700,
+      color: Palette.slide,
+      letterSpacing: 0.4,
+    ),
+  );
+
   static final chip = TextPaint(
     style: _style(size: 19, weight: FontWeight.w600, color: Palette.brand),
   );

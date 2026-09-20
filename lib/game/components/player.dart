@@ -1,8 +1,11 @@
 import 'dart:math' as math;
 
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/services.dart';
 
+import '../combat/health.dart';
+import '../combat/projectiles.dart';
 import '../theme/palette.dart';
 import 'arena_floor.dart';
 import 'pptx_actor.dart';
@@ -29,20 +32,27 @@ enum Facing {
       this == Facing.southWest || this == Facing.west || this == Facing.northWest;
 }
 
-/// The player character, moved by an on-screen stick or the keyboard.
+/// The player character, moved by an on-screen stick or the keyboard and armed
+/// with bullet points.
 ///
 /// Expects to be a child of an [ArenaFloor]: it moves in arena-local
 /// coordinates and clamps itself to the floor every frame.
-class Player extends PositionComponent with KeyboardHandler {
+///
+/// Taking a hit shrinks the player, because that is what AutoFit does to
+/// anything that does not fit. Being small is not purely a penalty -- a smaller
+/// player is a faster and narrower target -- but running out of size loses the
+/// slide.
+class Player extends PositionComponent with KeyboardHandler, CollisionCallbacks {
   Player({
     required Vector2 position,
     required double size,
     this.speed = 320,
     this.artPrefix = 'hero_idle_',
     this.joystick,
+    this.onDefeated,
   }) : super(position: position, size: Vector2.all(size), anchor: Anchor.center);
 
-  /// Slide units per second at full tilt.
+  /// Slide units per second at full tilt and full size.
   final double speed;
 
   final String artPrefix;
@@ -50,6 +60,16 @@ class Player extends PositionComponent with KeyboardHandler {
   /// The on-screen stick, when there is one. Its input is added to the
   /// keyboard's, so either works and neither has to be present.
   final JoystickComponent? joystick;
+
+  /// Called once the player has been shrunk out of the fight.
+  final void Function()? onDefeated;
+
+  static const double _fireCooldown = 0.32;
+
+  late final Health health = Health(max: 8, minScale: 0.4);
+
+  /// Set by the on-screen fire button. Held down, it auto-fires on cooldown.
+  bool triggerHeld = false;
 
   /// Which way the player last moved. Drives which artwork is drawn.
   Facing get facing => _facing;
@@ -59,7 +79,14 @@ class Player extends PositionComponent with KeyboardHandler {
   Vector2 get direction => _direction.clone();
   final Vector2 _direction = Vector2.zero();
 
+  /// The last direction actually travelled, which is where shots go. Starts
+  /// pointing up the slide, so the first shot reaches the boss without having
+  /// to move first.
+  final Vector2 _aim = Vector2(0, -1);
+
   final Vector2 _keyboard = Vector2.zero();
+  bool _spaceHeld = false;
+  double _sinceLastShot = _fireCooldown;
 
   /// Built eagerly rather than in [onLoad] so that facing can be applied to it
   /// from the moment the player exists.
@@ -84,7 +111,7 @@ class Player extends PositionComponent with KeyboardHandler {
 
   @override
   Future<void> onLoad() async {
-    await add(_art);
+    await addAll([_art, CircleHitbox()]);
   }
 
   @override
@@ -98,13 +125,18 @@ class Player extends PositionComponent with KeyboardHandler {
       }
     }
     // Opposite keys held together cancel out, which is what a player expects.
+    _spaceHeld = keysPressed.contains(LogicalKeyboardKey.space);
     return true;
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+    _move(dt);
+    _shoot(dt);
+  }
 
+  void _move(double dt) {
     _direction
       ..setFrom(_keyboard)
       ..add(joystick?.relativeDelta ?? Vector2.zero());
@@ -119,12 +151,63 @@ class Player extends PositionComponent with KeyboardHandler {
       return;
     }
 
-    position += _direction * speed * dt;
+    // Shrinking is not all bad: what you lose in presence you gain in pace.
+    final pace = speed * (2 - health.scale);
+    position += _direction * pace * dt;
+
     final floor = parent;
     if (floor is ArenaFloor) {
-      floor.clampInside(position, size);
+      floor.clampInside(position, scaledSize);
     }
+    _aim
+      ..setFrom(_direction)
+      ..normalize();
     _face(_direction);
+  }
+
+  void _shoot(double dt) {
+    _sinceLastShot += dt;
+    if (!(_spaceHeld || triggerHeld) || _sinceLastShot < _fireCooldown) {
+      return;
+    }
+    _sinceLastShot = 0;
+    fire();
+  }
+
+  /// Sends a bullet point along the current aim. Public so the fight can be
+  /// driven from tests without synthesising key events.
+  void fire() {
+    parent?.add(
+      BulletPoint(
+        position: position.clone(),
+        velocity: _aim * BulletPoint.speed,
+      ),
+    );
+  }
+
+  @override
+  void onCollisionStart(
+    Set<Vector2> intersectionPoints,
+    PositionComponent other,
+  ) {
+    super.onCollisionStart(intersectionPoints, other);
+    if (other is! ResizeHandle || health.isDead) {
+      return;
+    }
+    other.removeFromParent();
+    takeHit(other.damage);
+  }
+
+  /// Shrinks the player by [amount] hit points.
+  void takeHit([int amount = 1]) {
+    if (health.isDead) {
+      return;
+    }
+    health.damage(amount);
+    scale = Vector2.all(health.scale);
+    if (health.isDead) {
+      onDefeated?.call();
+    }
   }
 
   void _face(Vector2 direction) {
