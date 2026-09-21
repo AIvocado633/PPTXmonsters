@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:gamepads/gamepads.dart';
 
 import 'game/pptx_monsters_game.dart';
+import 'game/save/save_store.dart';
 import 'game/theme/palette.dart';
 
 const Set<TargetPlatform> _mobile = {TargetPlatform.android, TargetPlatform.iOS};
@@ -40,8 +41,10 @@ class PptxMonstersApp extends StatelessWidget {
       home: Scaffold(
         backgroundColor: Palette.workspace,
         body: GameWidget.controlled(
-          gameFactory: () =>
-              PptxMonstersGame(gamepadEvents: Gamepads.normalizedEvents),
+          gameFactory: () => PptxMonstersGame(
+            gamepadEvents: Gamepads.normalizedEvents,
+            saveStore: SharedPreferencesSaveStore(),
+          ),
         ),
       ),
     );

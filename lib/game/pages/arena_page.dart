@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
@@ -166,6 +167,10 @@ class ArenaPage extends SlidePage {
       return;
     }
     _resolved = true;
+    if (won) {
+      // Saved the moment it is won, so leaving from the dialog keeps it.
+      unawaited(game.save.recordWin(level.number));
+    }
 
     // Freeze the board rather than tearing it down, so the last moment of the
     // fight stays on screen behind the dialog.

@@ -83,6 +83,10 @@ other configurations. Double-clicking it works, and the game keeps running
 after the console window closes. For a hot-reload loop use `flutter run -d
 windows` instead.
 
+Progress is saved on the device as soon as a slide is won. On Windows it lives
+in `%APPDATA%\com.pptxmonsters\pptx_monsters\shared_preferences.json`; delete
+that file to start the deck over.
+
 Android, iOS and Windows are configured.
 
 The game is **landscape only**. The layout is a 16:9 slide, letterboxed onto
@@ -131,6 +135,7 @@ lib/
     pages/                   One file per screen
     components/              Ribbon, status bar, placeholders, buttons, actors
     art/pptx_art.dart        Loads PNG frames exported from PowerPoint
+    save/                    Progress kept between runs, as one JSON document
     theme/                   Colours and text styles, lifted from the Office UI
 assets/images/               Exported artwork (see docs/)
 ```
