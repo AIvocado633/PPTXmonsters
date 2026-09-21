@@ -21,11 +21,12 @@ import 'projectiles.dart';
 /// boss is drawn smaller each time. Run it down to nothing and the feature has
 /// shrunk itself out of existence.
 class AutoFitBoss extends Boss {
-  AutoFitBoss({
-    required super.position,
-    required super.aimAt,
-    required super.onDefeated,
-  }) : super(size: Vector2(220, 170));
+  /// Stands centred near the top of the arena and patrols from there.
+  AutoFitBoss(super.context)
+    : super(
+        position: Vector2(context.arenaSize.x / 2, 100),
+        size: Vector2(220, 170),
+      );
 
   /// The point sizes AutoFit steps through, longest-standing first. One step
   /// per hit, so the ladder's length is the boss's hit points.

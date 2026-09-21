@@ -88,7 +88,7 @@ class _SlideThumbnail extends PositionComponent
   final LevelDefinition level;
   final void Function() onSelected;
 
-  bool get _enabled => level.unlocked;
+  bool get _enabled => level.isBuilt;
 
   final Paint _surfacePaint = Paint()..color = Palette.slide;
   final Paint _lockedSurfacePaint = Paint()..color = const Color(0xFFF6F6F6);
@@ -110,7 +110,7 @@ class _SlideThumbnail extends PositionComponent
       ),
       TextComponent(
         text: level.boss,
-        textRenderer: level.unlocked
+        textRenderer: _enabled
             ? SlideText.thumbnailTitle
             : SlideText.thumbnailTitleLocked,
         position: Vector2(0, height + 16),

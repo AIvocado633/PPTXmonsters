@@ -1,6 +1,31 @@
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 
+/// Builds the feature a slide is fought against, from what the arena hands it.
+typedef BossBuilder = Boss Function(BossContext context);
+
+/// What the arena hands a feature when a slide starts.
+///
+/// Bundled into one object so that a boss needing something new from the
+/// arena adds a field here, rather than a parameter to every boss there is.
+class BossContext {
+  const BossContext({
+    required this.arenaSize,
+    required this.aimAt,
+    required this.onDefeated,
+  });
+
+  /// The size of the floor the fight happens on. Bosses work in arena-local
+  /// coordinates, so this is where they place themselves.
+  final Vector2 arenaSize;
+
+  /// Where to throw things: the player's arena-local position.
+  final Vector2 Function() aimAt;
+
+  /// To be called once the feature is gone and any death animation has played.
+  final void Function() onDefeated;
+}
+
 /// A PowerPoint feature, standing between the player and the end of the deck.
 ///
 /// Every feature fights in its own way, so this holds only what the arena needs
@@ -8,18 +33,18 @@ import 'package:flame/components.dart';
 /// boss is laid out, what it throws and how damage is distributed inside it are
 /// entirely the boss's business.
 abstract class Boss extends PositionComponent with CollisionCallbacks {
-  Boss({
-    required Vector2 position,
-    required Vector2 size,
-    required this.aimAt,
-    required this.onDefeated,
-  }) : super(position: position, size: size, anchor: Anchor.center);
+  Boss(this.context, {required Vector2 position, required Vector2 size})
+    : super(position: position, size: size, anchor: Anchor.center);
+
+  /// What the arena handed this feature when the slide started.
+  final BossContext context;
 
   /// Where to throw things: the player's arena-local position.
-  final Vector2 Function() aimAt;
+  Vector2 aimAt() => context.aimAt();
 
-  /// Called once the feature is gone and any death animation has played.
-  final void Function() onDefeated;
+  /// Ends the fight in the player's favour. Call once the feature is gone and
+  /// any death animation has played.
+  void onDefeated() => context.onDefeated();
 
   /// Hits still needed to finish the feature off. Zero means beaten.
   int get remainingHits;

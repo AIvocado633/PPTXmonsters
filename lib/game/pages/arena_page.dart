@@ -2,9 +2,7 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 
-import '../combat/autofit_boss.dart';
 import '../combat/boss.dart';
-import '../combat/smartart_boss.dart';
 import '../components/arena_floor.dart';
 import '../components/chip_button.dart';
 import '../components/control_stick.dart';
@@ -22,9 +20,15 @@ import '../theme/slide_text.dart';
 ///
 /// The whole playfield is visible at once, because it is a slide. The page
 /// itself is feature-agnostic -- it owns the floor, the controls and the
-/// win/lose flow, and asks [bossFor] for whatever is standing in the way.
+/// win/lose flow, and asks its [level] for whatever is standing in the way.
 class ArenaPage extends SlidePage {
-  ArenaPage({required this.level});
+  /// Only a slide whose fight has been built can be opened; the slide sorter
+  /// never offers the others.
+  ArenaPage({required this.level})
+    : assert(
+        level.isBuilt,
+        'Slide ${level.number} (${level.boss}) has no fight yet',
+      );
 
   static const double _arenaWidth = 900;
   static const double _arenaHeight = 420;
@@ -58,36 +62,6 @@ class ArenaPage extends SlidePage {
   late int _shownHealth;
   late String _shownReadout;
 
-  /// Builds the feature standing in the way of [level].
-  ///
-  /// Throws for a level whose boss has not been built. That is unreachable
-  /// through the game -- the slide sorter only opens unlocked levels -- and
-  /// `deck_test` fails if a level is ever unlocked without a boss to match.
-  static Boss bossFor(
-    LevelDefinition level, {
-    required Vector2 Function() aimAt,
-    required void Function() onDefeated,
-  }) {
-    switch (level.number) {
-      case 1:
-        return AutoFitBoss(
-          position: Vector2(_arenaWidth / 2, 100),
-          aimAt: aimAt,
-          onDefeated: onDefeated,
-        );
-      case 2:
-        return SmartArtBoss(
-          position: Vector2(_arenaWidth / 2, 140),
-          aimAt: aimAt,
-          onDefeated: onDefeated,
-        );
-      default:
-        throw UnimplementedError(
-          'Level ${level.number} (${level.boss}) has no boss yet',
-        );
-    }
-  }
-
   @override
   Future<void> onLoad() async {
     floor = ArenaFloor(
@@ -104,10 +78,12 @@ class ArenaPage extends SlidePage {
       gamepad: game.gamepad,
       onDefeated: _onPlayerShrunkAway,
     );
-    boss = bossFor(
-      level,
-      aimAt: () => player.position,
-      onDefeated: _onBossFinished,
+    boss = level.buildBoss!(
+      BossContext(
+        arenaSize: floor.size.clone(),
+        aimAt: () => player.position,
+        onDefeated: _onBossFinished,
+      ),
     );
     _shownHealth = player.health.current;
     _shownReadout = boss.readout;
