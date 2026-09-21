@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flame/collisions.dart';
@@ -44,6 +45,19 @@ abstract class Projectile extends PositionComponent with CollisionCallbacks {
   }
 }
 
+/// Anything a feature throws at the player.
+///
+/// The player checks for this type rather than for a particular boss's
+/// ammunition, so each new feature can bring its own without touching the
+/// player.
+abstract class EnemyShot extends Projectile {
+  EnemyShot({
+    required super.position,
+    required super.velocity,
+    required super.size,
+  });
+}
+
 /// The player's shot: a bullet point, fired at the feature responsible.
 class BulletPoint extends Projectile {
   BulletPoint({required super.position, required super.velocity})
@@ -61,7 +75,7 @@ class BulletPoint extends Projectile {
 
 /// The boss's shot: one of the little white squares PowerPoint puts around a
 /// selected shape, thrown at you so it can resize you down.
-class ResizeHandle extends Projectile {
+class ResizeHandle extends EnemyShot {
   ResizeHandle({required super.position, required super.velocity})
     : super(size: 20);
 
@@ -84,5 +98,31 @@ class ResizeHandle extends Projectile {
     final rect = size.toRect().deflate(2);
     canvas.drawRect(rect, _fill);
     canvas.drawRect(rect, _stroke);
+  }
+}
+
+/// SmartArt's shot: one of the connector arrows it draws between shapes,
+/// sent at the player instead of at the next bullet in the list.
+class ConnectorArrow extends EnemyShot {
+  ConnectorArrow({required super.position, required super.velocity})
+    : super(size: 30);
+
+  static const double speed = 340;
+
+  final Paint _paint = Paint()..color = Palette.smartArt;
+
+  @override
+  void onMount() {
+    super.onMount();
+    // Point the arrow the way it is travelling.
+    angle = math.atan2(velocity.y, velocity.x);
+  }
+
+  @override
+  void render(Canvas canvas) {
+    canvas.drawPath(
+      blockArrowPath(Offset(width / 2, height / 2), width),
+      _paint,
+    );
   }
 }

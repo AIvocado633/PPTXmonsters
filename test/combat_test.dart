@@ -37,7 +37,7 @@ void main() {
       'counts down the point-size ladder, one step per hit',
       PptxMonstersGame.new,
       (game) async {
-        final boss = (await openArena(game)).boss;
+        final boss = (await openArena(game)).boss as AutoFitBoss;
         expect(boss.pointSize, AutoFitBoss.pointLadder.first);
 
         boss.takeHit();
@@ -56,7 +56,7 @@ void main() {
       'gets visibly smaller as it is worn down',
       PptxMonstersGame.new,
       (game) async {
-        final boss = (await openArena(game)).boss;
+        final boss = (await openArena(game)).boss as AutoFitBoss;
         final full = boss.scale.x;
 
         boss.takeHit(4);
@@ -103,13 +103,13 @@ void main() {
       PptxMonstersGame.new,
       (game) async {
         final arena = await openArena(game);
-        final before = arena.boss.health.current;
+        final before = arena.boss.remainingHits;
 
         arena.player.fire();
         advance(game, 0.8);
         await game.ready();
 
-        expect(arena.boss.health.current, lessThan(before));
+        expect(arena.boss.remainingHits, lessThan(before));
         expect(arena.floor.children.whereType<BulletPoint>(), isEmpty);
       },
     );
@@ -241,14 +241,14 @@ void main() {
       (game) async {
         final first = await openArena(game);
         first.boss.takeHit(3);
-        expect(first.boss.health.current, lessThan(AutoFitBoss.pointLadder.length));
+        expect(first.boss.remainingHits, lessThan(AutoFitBoss.pointLadder.length));
 
         game.router.pop();
         await game.ready();
         final second = await openArena(game);
 
         expect(second, isNot(same(first)));
-        expect(second.boss.health.current, AutoFitBoss.pointLadder.length);
+        expect(second.boss.remainingHits, AutoFitBoss.pointLadder.length);
         expect(second.player.health.current, second.player.health.max);
       },
     );

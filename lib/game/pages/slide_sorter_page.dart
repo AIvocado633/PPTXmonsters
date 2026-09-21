@@ -57,7 +57,8 @@ class SlideSorterPage extends SlidePage {
             _gridTop + row * (_thumbHeight + _gapY),
           ),
           size: Vector2(_thumbWidth, _thumbHeight),
-          onSelected: () => game.router.pushNamed(Routes.slideShow),
+          onSelected: () =>
+              game.router.pushNamed(Routes.slideShowFor(level.number)),
         )..flyIn(delay: 0.16 + index * 0.05),
       );
     }

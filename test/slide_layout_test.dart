@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pptx_monsters/game/components/autoshape_backdrop.dart';
 import 'package:pptx_monsters/game/components/ribbon_bar.dart';
 import 'package:pptx_monsters/game/components/status_bar.dart';
+import 'package:pptx_monsters/game/levels.dart';
 import 'package:pptx_monsters/game/pptx_monsters_game.dart';
 import 'package:pptx_monsters/game/routes.dart';
 import 'package:pptx_monsters/game/slide/slide_metrics.dart';
@@ -27,8 +28,10 @@ void main() {
   for (final route in [
     Routes.normalView,
     Routes.slideSorter,
-    Routes.slideShow,
     Routes.designIdeas,
+    // Every playable level, so a new boss cannot quietly overflow a slide.
+    for (final level in kLevels.where((level) => level.unlocked))
+      Routes.slideShowFor(level.number),
   ]) {
     group(route, () {
       testWithGame<PptxMonstersGame>(

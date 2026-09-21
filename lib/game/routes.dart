@@ -10,7 +10,13 @@ abstract final class Routes {
   static const slideSorter = 'slide-sorter';
 
   /// Gameplay: the top-down arena, presented as a running slide show.
+  ///
+  /// This is a route *factory* name, not a route: each level gets its own
+  /// route, built on demand. Use [slideShowFor] to name a concrete one.
   static const slideShow = 'slide-show';
+
+  /// The route for a particular level, e.g. `slide-show/2`.
+  static String slideShowFor(int levelNumber) => '$slideShow/$levelNumber';
 
   /// Settings, presented as the "Design Ideas" task pane.
   static const designIdeas = 'design-ideas';

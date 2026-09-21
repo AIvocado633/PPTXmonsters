@@ -7,6 +7,7 @@ import 'pages/arena_page.dart';
 import 'pages/design_ideas_page.dart';
 import 'pages/main_menu_page.dart';
 import 'pages/slide_sorter_page.dart';
+import 'levels.dart';
 import 'routes.dart';
 import 'theme/palette.dart';
 
@@ -30,12 +31,18 @@ class PptxMonstersGame extends FlameGame
     await add(
       router = RouterComponent(
         initialRoute: Routes.normalView,
+        routeFactories: {
+          // One route per level, built on demand, and not kept alive:
+          // re-entering a level should start a fresh fight rather than drop
+          // you back into one you already won or lost.
+          Routes.slideShow: (levelNumber) => Route(
+            () => ArenaPage(level: levelNumbered(int.parse(levelNumber))),
+            maintainState: false,
+          ),
+        },
         routes: {
           Routes.normalView: Route(MainMenuPage.new),
           Routes.slideSorter: Route(SlideSorterPage.new),
-          // Not kept alive: re-entering a level should start a fresh fight,
-          // not drop you back into one you already won or lost.
-          Routes.slideShow: Route(ArenaPage.new, maintainState: false),
           Routes.designIdeas: Route(DesignIdeasPage.new),
         },
       ),

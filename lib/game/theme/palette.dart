@@ -34,6 +34,11 @@ abstract final class Palette {
   static const placeholderStroke = Color(0xFFBFBFBF);
   static const placeholderText = Color(0xFFA6A6A6);
 
+  /// Boss colours, one family per feature so two fights never read alike.
+  static const autoFit = Color(0xFF2B579A);
+  static const smartArt = Color(0xFF3F8F4F);
+  static const smartArtDark = Color(0xFF2E6B3A);
+
   /// Accents.
   static const hyperlink = Color(0xFF0563C1);
   static const selection = Color(0xFF2B579A);

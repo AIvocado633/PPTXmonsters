@@ -16,12 +16,14 @@ Slide 1 is playable end to end. The other five bosses are named but not built.
   ribbon, status bar, dashed placeholders and staggered "Fly In" entrances.
 - **Slide sorter** — level select, showing the six bosses; only the first is
   unlocked.
-- **Slide show** — the AutoFit fight. Move with the stick or WASD, shoot bullet
-  points with the button or Space, and shrink the feature out of the deck
-  before it shrinks you.
+- **Slide show** — two fights so far, AutoFit and SmartArt. Move with the stick
+  or WASD and shoot bullet points with the button or Space.
 - **Design Ideas** — a settings pane with nothing wired up yet.
 
-### How the AutoFit fight works
+Each fight is built out of the feature's own behaviour rather than out of a
+health bar with a new sprite on it.
+
+### Slide 1 — AutoFit
 
 AutoFit shrinks whatever does not fit, so the fight turns that on both sides.
 Every hit the boss lands makes the player smaller; every bullet point that
@@ -32,6 +34,17 @@ the slide.
 Shrinking is not purely a punishment. A smaller player is quicker and a
 narrower target, and can squeeze closer to the walls — the trade is that you
 have less room left to lose.
+
+### Slide 2 — SmartArt
+
+SmartArt is not one target but six connected shapes. Break one and the
+survivors immediately re-lay themselves out into the next layout — cycle,
+process, hierarchy, pyramid — closing ranks and throwing your aim away, which
+is exactly what SmartArt does to a slide the moment you add or remove a line.
+It fights back by throwing its connector arrows at you.
+
+Where AutoFit is one target that gets smaller, SmartArt is many targets that
+keep moving: same controls, a completely different problem.
 
 ## Running it
 

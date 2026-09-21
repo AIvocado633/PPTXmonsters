@@ -191,7 +191,7 @@ class Player extends PositionComponent with KeyboardHandler, CollisionCallbacks 
     PositionComponent other,
   ) {
     super.onCollisionStart(intersectionPoints, other);
-    if (other is! ResizeHandle || health.isDead) {
+    if (other is! EnemyShot || health.isDead) {
       return;
     }
     other.removeFromParent();

@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 
 import '../combat/autofit_boss.dart';
+import '../combat/boss.dart';
+import '../combat/smartart_boss.dart';
 import '../components/arena_floor.dart';
 import '../components/chip_button.dart';
 import '../components/control_stick.dart';
@@ -19,15 +21,18 @@ import '../theme/slide_text.dart';
 
 /// A level: one slide, one feature, fought out from directly above.
 ///
-/// The whole playfield is visible at once, because it is a slide. Both sides of
-/// the fight shrink as they lose -- AutoFit's own behaviour, turned on the
-/// feature as well as on the player -- and whoever runs out of size first
-/// loses.
+/// The whole playfield is visible at once, because it is a slide. The page
+/// itself is feature-agnostic -- it owns the floor, the controls and the
+/// win/lose flow, and asks [bossFor] for whatever is standing in the way.
 class ArenaPage extends SlidePage {
+  ArenaPage({required this.level});
+
   static const double _arenaWidth = 900;
   static const double _arenaHeight = 420;
   static const double _arenaTop = 150;
   static const double _playerSize = 120;
+
+  final LevelDefinition level;
 
   @override
   Color get surfaceColor => Palette.showBlack;
@@ -35,21 +40,51 @@ class ArenaPage extends SlidePage {
   @override
   bool get castsShadow => false;
 
-  final LevelDefinition _level = kLevels.first;
-
   late final ArenaFloor floor;
   late final ControlStick stick;
   late final FireButton fireButton;
   late final Player player;
-  late final AutoFitBoss boss;
+  late final Boss boss;
 
   /// True once the slide has been won or lost.
   bool get isResolved => _resolved;
   bool _resolved = false;
 
   late final TextComponent _sizeReadout;
+  late final TextComponent _bossReadout;
   late final TextComponent _controlsHint;
   late int _shownHealth;
+  late String _shownReadout;
+
+  /// Builds the feature standing in the way of [level].
+  ///
+  /// Throws for a level whose boss has not been built. That is unreachable
+  /// through the game -- the slide sorter only opens unlocked levels -- and
+  /// `deck_test` fails if a level is ever unlocked without a boss to match.
+  static Boss bossFor(
+    LevelDefinition level, {
+    required Vector2 Function() aimAt,
+    required void Function() onDefeated,
+  }) {
+    switch (level.number) {
+      case 1:
+        return AutoFitBoss(
+          position: Vector2(_arenaWidth / 2, 100),
+          aimAt: aimAt,
+          onDefeated: onDefeated,
+        );
+      case 2:
+        return SmartArtBoss(
+          position: Vector2(_arenaWidth / 2, 140),
+          aimAt: aimAt,
+          onDefeated: onDefeated,
+        );
+      default:
+        throw UnimplementedError(
+          'Level ${level.number} (${level.boss}) has no boss yet',
+        );
+    }
+  }
 
   @override
   Future<void> onLoad() async {
@@ -64,22 +99,23 @@ class ArenaPage extends SlidePage {
       joystick: stick,
       onDefeated: _onPlayerShrunkAway,
     );
-    boss = AutoFitBoss(
-      position: Vector2(_arenaWidth / 2, 100),
+    boss = bossFor(
+      level,
       aimAt: () => player.position,
-      onDefeated: _onBossShrunkAway,
+      onDefeated: _onBossFinished,
     );
     fireButton = FireButton(
       position: Vector2(1160, 612),
       onHeldChanged: (held) => player.triggerHeld = held,
     );
     _shownHealth = player.health.current;
+    _shownReadout = boss.readout;
 
     floor.addAll([boss, player]);
 
     await addAll([
       TextComponent(
-        text: 'Slide ${_level.number} · ${_level.boss}',
+        text: 'Slide ${level.number} · ${level.boss}',
         textRenderer: SlideText.showHeading,
         position: Vector2(kSlideWidth / 2, 80),
         anchor: Anchor.center,
@@ -88,10 +124,18 @@ class ArenaPage extends SlidePage {
       stick,
       fireButton,
       _sizeReadout = TextComponent(
-        text: _readoutText,
+        text: _playerReadout,
         textRenderer: SlideText.showBody,
-        position: Vector2(120, 524),
-        anchor: Anchor.center,
+        position: Vector2(56, 524),
+        anchor: Anchor.centerLeft,
+      ),
+      // Each feature reports its health in its own units, so the readout is
+      // the boss's own wording rather than a percentage.
+      _bossReadout = TextComponent(
+        text: _bossReadoutText,
+        textRenderer: SlideText.showBody,
+        position: Vector2(1224, 524),
+        anchor: Anchor.centerRight,
       ),
       _controlsHint = TextComponent(
         text: 'Move with the stick or WASD. Fire with the button or Space.',
@@ -111,34 +155,30 @@ class ArenaPage extends SlidePage {
     ]);
   }
 
-  String get _readoutText =>
+  String get _playerReadout =>
       'You: ${(player.health.fraction * 100).round()}%';
+
+  String get _bossReadoutText => '${level.boss}: ${boss.readout}';
 
   @override
   void update(double dt) {
     super.update(dt);
-    // Only re-lay out the readout when the number it shows actually moves.
+    // Only re-lay out a readout when the value it shows actually moves.
     if (_shownHealth != player.health.current) {
       _shownHealth = player.health.current;
-      _sizeReadout.text = _readoutText;
+      _sizeReadout.text = _playerReadout;
+    }
+    if (_shownReadout != boss.readout) {
+      _shownReadout = boss.readout;
+      _bossReadout.text = _bossReadoutText;
     }
   }
 
-  void _onBossShrunkAway() {
-    _resolve(
-      won: true,
-      title: 'Slide complete',
-      message: 'AutoFit shrank itself out of the deck. One feature down.',
-    );
-  }
+  void _onBossFinished() =>
+      _resolve(won: true, title: 'Slide complete', message: level.winLine);
 
-  void _onPlayerShrunkAway() {
-    _resolve(
-      won: false,
-      title: 'Slide failed',
-      message: 'AutoFit shrank you until you no longer fit on the slide.',
-    );
-  }
+  void _onPlayerShrunkAway() =>
+      _resolve(won: false, title: 'Slide failed', message: level.lossLine);
 
   void _resolve({
     required bool won,
@@ -175,7 +215,7 @@ class ArenaPage extends SlidePage {
   /// builds a brand new fight.
   void _retry() {
     game.router.pop();
-    game.router.pushNamed(Routes.slideShow);
+    game.router.pushNamed(Routes.slideShowFor(level.number));
   }
 
   void _leave() => game.router.pop();

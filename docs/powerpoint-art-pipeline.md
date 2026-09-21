@@ -29,7 +29,9 @@ assets/images/hero_idle_002.png
 `PptxArt.loadAnimation('hero_idle_')` loads `000`, `001`, … and stops at the
 first missing number. A single still is just a one-frame sequence.
 
-The prefix is `<actor>_<state>_`. States in use so far:
+The prefix is `<actor>_<state>_`. Actors in use so far are `hero`,
+`autofit` and `smartart` -- the last is a single SmartArt shape, drawn once
+and repeated for every node in the diagram. States in use so far:
 
 - `idle` — standing still, the only one the menu needs
 - `walk` — planned, for the arena

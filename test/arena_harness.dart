@@ -4,10 +4,11 @@ import 'package:pptx_monsters/game/pages/arena_page.dart';
 import 'package:pptx_monsters/game/pptx_monsters_game.dart';
 import 'package:pptx_monsters/game/routes.dart';
 
-/// Opens the arena and returns its page, ready to be driven frame by frame.
-Future<ArenaPage> openArena(PptxMonstersGame game) async {
+/// Opens a level's arena and returns its page, ready to be driven frame by
+/// frame. Defaults to slide 1, the AutoFit fight.
+Future<ArenaPage> openArena(PptxMonstersGame game, {int level = 1}) async {
   await game.ready();
-  game.router.pushNamed(Routes.slideShow);
+  game.router.pushNamed(Routes.slideShowFor(level));
   await game.ready();
   return game.router.currentRoute.children.whereType<ArenaPage>().single;
 }

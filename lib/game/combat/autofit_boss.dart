@@ -10,6 +10,7 @@ import 'package:flutter/painting.dart';
 import '../components/placeholder_frame.dart';
 import '../components/pptx_actor.dart';
 import '../theme/palette.dart';
+import 'boss.dart';
 import 'health.dart';
 import 'projectiles.dart';
 
@@ -19,17 +20,12 @@ import 'projectiles.dart';
 /// same ladder of point sizes PowerPoint walks when AutoFit kicks in, and the
 /// boss is drawn smaller each time. Run it down to nothing and the feature has
 /// shrunk itself out of existence.
-class AutoFitBoss extends PositionComponent with CollisionCallbacks {
+class AutoFitBoss extends Boss {
   AutoFitBoss({
-    required Vector2 position,
-    required this.aimAt,
-    required this.onDefeated,
-  }) : super(position: position, size: Vector2(220, 170), anchor: Anchor.center);
-
-  /// Where to throw resize handles: the player's arena-local position.
-  final Vector2 Function() aimAt;
-
-  final void Function() onDefeated;
+    required super.position,
+    required super.aimAt,
+    required super.onDefeated,
+  }) : super(size: Vector2(220, 170));
 
   /// The point sizes AutoFit steps through, longest-standing first. One step
   /// per hit, so the ladder's length is the boss's hit points.
@@ -47,6 +43,16 @@ class AutoFitBoss extends PositionComponent with CollisionCallbacks {
   int get pointSize =>
       health.isDead ? 0 : pointLadder[pointLadder.length - health.current];
 
+  @override
+  int get remainingHits => health.current;
+
+  @override
+  int get totalHits => pointLadder.length;
+
+  @override
+  String get readout => '$pointSize pt';
+
+  @override
   bool get isDefeated => _defeated;
   bool _defeated = false;
 
@@ -62,11 +68,11 @@ class AutoFitBoss extends PositionComponent with CollisionCallbacks {
       PlaceholderFrame(
         position: Vector2.zero(),
         size: size.clone(),
-        strokeColor: Palette.selection,
+        strokeColor: Palette.autoFit,
       ),
       PptxActor(
         artPrefix: 'autofit_idle_',
-        tint: Palette.selection,
+        tint: Palette.autoFit,
         position: Vector2(width / 2, 68),
         size: Vector2.all(104),
         anchor: Anchor.center,
@@ -136,8 +142,8 @@ class AutoFitBoss extends PositionComponent with CollisionCallbacks {
     takeHit(other.damage);
   }
 
-  /// Steps the boss down the ladder. Exposed so the fight can be driven from
-  /// tests without synthesising collisions.
+  /// Steps the boss down the ladder.
+  @override
   void takeHit([int amount = 1]) {
     if (_defeated) {
       return;
