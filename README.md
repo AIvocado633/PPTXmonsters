@@ -10,16 +10,57 @@ Built with Flutter and the [Flame](https://flame-engine.org) engine.
 
 ## Status
 
-The start menu and the navigation around it are in place. Gameplay is not.
+Slide 1 is playable end to end. The other five bosses are named but not built.
 
 - **Start menu** — a title slide in PowerPoint's normal editing view, with
   ribbon, status bar, dashed placeholders and staggered "Fly In" entrances.
 - **Slide sorter** — level select, showing the six bosses; only the first is
   unlocked.
-- **Slide show** — the arena, staged but not playable: it sets up the top-down
-  framing, the projector-black surround and the actors. Movement and combat go
-  here next.
+- **Slide show** — two fights so far, AutoFit and SmartArt, with twin-stick
+  controls (see below).
 - **Design Ideas** — a settings pane with nothing wired up yet.
+
+### Controls
+
+Twin-stick: one input moves, the other aims, and pushing the aim in any
+direction fires that way immediately — there is no fire button.
+
+|          | Touch             | Keyboard   | Controller  |
+| -------- | ----------------- | ---------- | ----------- |
+| **Move** | left thumb stick  | WASD       | left stick  |
+| **Aim**  | right thumb stick | arrow keys | right stick |
+
+All three work at once, so you can pick up a controller mid-fight. Space still
+fires along the way you are walking, for anyone who would rather not aim.
+Controllers come through the Flame team's
+[`gamepads`](https://pub.dev/packages/gamepads) package, whose normalized
+events map every platform's pad onto the same Xbox-style layout.
+
+Each fight is built out of the feature's own behaviour rather than out of a
+health bar with a new sprite on it.
+
+### Slide 1 — AutoFit
+
+AutoFit shrinks whatever does not fit, so the fight turns that on both sides.
+Every hit the boss lands makes the player smaller; every bullet point that
+lands steps the boss down the same ladder of point sizes PowerPoint walks when
+AutoFit kicks in, from 54 pt to nothing. Whoever runs out of size first loses
+the slide.
+
+Shrinking is not purely a punishment. A smaller player is quicker and a
+narrower target, and can squeeze closer to the walls — the trade is that you
+have less room left to lose.
+
+### Slide 2 — SmartArt
+
+SmartArt is not one target but six connected shapes. Break one and the
+survivors immediately re-lay themselves out into the next layout — cycle,
+process, hierarchy, pyramid — closing ranks and throwing your aim away, which
+is exactly what SmartArt does to a slide the moment you add or remove a line.
+It fights back by throwing its connector arrows at you.
+
+Where AutoFit is one target that gets smaller, SmartArt is many targets that
+keep moving: same controls, a completely different problem.
 
 ## Running it
 

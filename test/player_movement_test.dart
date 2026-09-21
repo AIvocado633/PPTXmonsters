@@ -5,18 +5,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pptx_monsters/game/components/control_stick.dart';
 import 'package:pptx_monsters/game/components/player.dart';
 import 'package:pptx_monsters/game/components/pptx_actor.dart';
-import 'package:pptx_monsters/game/pages/arena_page.dart';
 import 'package:pptx_monsters/game/pptx_monsters_game.dart';
-import 'package:pptx_monsters/game/routes.dart';
+import 'arena_harness.dart';
 
 void main() {
   group('player', () {
     testWithGame<PptxMonstersGame>(
-      'starts in the middle of the arena',
+      'starts centred below the boss',
       PptxMonstersGame.new,
       (game) async {
         final arena = await openArena(game);
-        expect(arena.player.position, closeToVector(arena.floor.centre, 0.01));
+
+        expect(arena.player.position.x, closeTo(arena.floor.size.x / 2, 0.01));
+        expect(arena.player.position.y, greaterThan(arena.boss.position.y));
+        expect(arena.player.position.y, lessThan(arena.floor.size.y));
       },
     );
 
@@ -87,12 +89,14 @@ void main() {
       PptxMonstersGame.new,
       (game) async {
         final arena = await openArena(game);
-        final half = arena.player.size / 2;
+        // Take the boss off the board: a hit would shrink the player and move
+        // the wall it can reach, which is tested separately in combat_test.
+        arena.boss.removeFromParent();
+        await game.ready();
+        final half = arena.player.scaledSize / 2;
 
         hold(arena.player, {LogicalKeyboardKey.keyD, LogicalKeyboardKey.keyS});
-        for (var frame = 0; frame < 300; frame++) {
-          game.update(1 / 60);
-        }
+        advance(game, 5);
 
         expect(
           arena.player.position.x,
@@ -104,9 +108,7 @@ void main() {
         );
 
         hold(arena.player, {LogicalKeyboardKey.keyA, LogicalKeyboardKey.keyW});
-        for (var frame = 0; frame < 300; frame++) {
-          game.update(1 / 60);
-        }
+        advance(game, 5);
 
         expect(arena.player.position.x, closeTo(half.x, 0.01));
         expect(arena.player.position.y, closeTo(half.y, 0.01));
@@ -138,13 +140,13 @@ void main() {
     );
   });
 
-  group('thumb stick', () {
+  group('move stick', () {
     test('adds its push to the keyboard and stays capped at full tilt', () {
-      final stick = _StubStick();
+      final stick = StubStick();
       final player = Player(
         position: Vector2.zero(),
         size: 100,
-        joystick: stick,
+        moveStick: stick,
       );
 
       // Half tilt east.
@@ -160,45 +162,16 @@ void main() {
     });
 
     testWithGame<PptxMonstersGame>(
-      'is on the arena page and wired to the player',
+      'sits on the arena page beside the aim stick, both wired to the player',
       PptxMonstersGame.new,
       (game) async {
         final arena = await openArena(game);
-        final sticks = arena.children.whereType<ControlStick>();
 
-        expect(sticks.length, 1);
-        expect(arena.player.joystick, same(sticks.single));
+        expect(arena.children.whereType<ControlStick>().length, 2);
+        expect(arena.player.moveStick, same(arena.moveStick));
+        expect(arena.player.aimStick, same(arena.aimStick));
+        expect(arena.player.gamepad, same(game.gamepad));
       },
     );
   });
-}
-
-/// Tells [player] which keys are currently down.
-void hold(Player player, Set<LogicalKeyboardKey> keys) {
-  player.onKeyEvent(
-    const KeyDownEvent(
-      physicalKey: PhysicalKeyboardKey.keyW,
-      logicalKey: LogicalKeyboardKey.keyW,
-      timeStamp: Duration.zero,
-    ),
-    keys,
-  );
-}
-
-Future<ArenaPage> openArena(PptxMonstersGame game) async {
-  await game.ready();
-  game.router.pushNamed(Routes.slideShow);
-  await game.ready();
-  return game.router.currentRoute.children.whereType<ArenaPage>().single;
-}
-
-/// A stick whose push can be set directly, so the player's handling of it can
-/// be tested without synthesising drag gestures.
-class _StubStick extends ControlStick {
-  _StubStick() : super(position: Vector2.zero());
-
-  Vector2 push = Vector2.zero();
-
-  @override
-  Vector2 get relativeDelta => push;
 }

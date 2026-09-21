@@ -6,9 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pptx_monsters/game/components/autoshape_backdrop.dart';
 import 'package:pptx_monsters/game/components/ribbon_bar.dart';
 import 'package:pptx_monsters/game/components/status_bar.dart';
+import 'package:pptx_monsters/game/levels.dart';
 import 'package:pptx_monsters/game/pptx_monsters_game.dart';
 import 'package:pptx_monsters/game/routes.dart';
 import 'package:pptx_monsters/game/slide/slide_metrics.dart';
+
+import 'arena_harness.dart';
 import 'package:pptx_monsters/game/slide/slide_page.dart';
 
 /// Layout guard rails.
@@ -25,8 +28,10 @@ void main() {
   for (final route in [
     Routes.normalView,
     Routes.slideSorter,
-    Routes.slideShow,
     Routes.designIdeas,
+    // Every playable level, so a new boss cannot quietly overflow a slide.
+    for (final level in kLevels.where((level) => level.unlocked))
+      Routes.slideShowFor(level.number),
   ]) {
     group(route, () {
       testWithGame<PptxMonstersGame>(
@@ -97,9 +102,7 @@ Future<SlidePage> settle(PptxMonstersGame game, String route) async {
     await game.ready();
   }
   // Three seconds is comfortably past the last staggered fly-in.
-  for (var frame = 0; frame < 180; frame++) {
-    game.update(1 / 60);
-  }
+  advance(game, 3);
   await game.ready();
 
   // The route below stays mounted, so take the page off the active route

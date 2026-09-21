@@ -79,7 +79,7 @@ class MainMenuPage extends SlidePage {
       (
         label: 'Start Slide Show',
         hint: 'F5',
-        route: Routes.slideShow,
+        route: Routes.slideShowFor(1),
         enabled: true,
       ),
       (

@@ -9,7 +9,10 @@ import '../theme/palette.dart';
 /// Actors are added as children of the floor rather than of the page, so their
 /// positions are arena-local and staying inside the arena is a clamp against
 /// [size] instead of arithmetic against the floor's offset on the slide.
-class ArenaFloor extends PositionComponent {
+///
+/// It is also the handle for freezing the fight: [pause] scales time to zero
+/// for every actor and projectile on the board at once.
+class ArenaFloor extends PositionComponent with HasTimeScale {
   ArenaFloor({required Vector2 position, required Vector2 size})
     : super(position: position, size: size);
 
