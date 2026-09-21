@@ -1,4 +1,7 @@
+import 'package:flame/game.dart';
 import 'package:flutter/services.dart';
+import 'package:gamepads/gamepads.dart';
+import 'package:pptx_monsters/game/components/control_stick.dart';
 import 'package:pptx_monsters/game/components/player.dart';
 import 'package:pptx_monsters/game/pages/arena_page.dart';
 import 'package:pptx_monsters/game/pptx_monsters_game.dart';
@@ -34,9 +37,37 @@ void hold(Player player, Set<LogicalKeyboardKey> keys) {
 ///
 /// Components spawned during a frame mount at the start of the next one, so
 /// await `game.ready()` before inspecting `children`.
-void advance(PptxMonstersGame game, double seconds) {
+void advance(FlameGame game, double seconds) {
   final frames = (seconds * 60).round();
   for (var frame = 0; frame < frames; frame++) {
     game.update(1 / 60);
   }
+}
+
+/// A thumb stick whose push can be set directly, so the player's handling
+/// of touch input can be tested without synthesising drag gestures.
+class StubStick extends ControlStick {
+  StubStick() : super(position: Vector2.zero());
+
+  Vector2 push = Vector2.zero();
+
+  @override
+  Vector2 get relativeDelta => push;
+}
+
+/// A normalized controller event moving one stick axis to [value].
+NormalizedGamepadEvent stickEvent(GamepadAxis axis, double value) {
+  return NormalizedGamepadEvent(
+    gamepadId: 'pad',
+    timestamp: 0,
+    value: value,
+    axis: axis,
+    rawEvent: GamepadEvent(
+      gamepadId: 'pad',
+      timestamp: 0,
+      type: KeyType.analog,
+      key: axis.name,
+      value: value,
+    ),
+  );
 }

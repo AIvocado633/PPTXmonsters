@@ -8,7 +8,6 @@ import '../combat/smartart_boss.dart';
 import '../components/arena_floor.dart';
 import '../components/chip_button.dart';
 import '../components/control_stick.dart';
-import '../components/fire_button.dart';
 import '../components/player.dart';
 import '../components/result_panel.dart';
 import '../levels.dart';
@@ -41,8 +40,11 @@ class ArenaPage extends SlidePage {
   bool get castsShadow => false;
 
   late final ArenaFloor floor;
-  late final ControlStick stick;
-  late final FireButton fireButton;
+
+  /// Twin sticks: the left thumb moves, the right thumb aims and fires.
+  late final ControlStick moveStick;
+  late final ControlStick aimStick;
+
   late final Player player;
   late final Boss boss;
 
@@ -92,21 +94,20 @@ class ArenaPage extends SlidePage {
       position: Vector2((kSlideWidth - _arenaWidth) / 2, _arenaTop),
       size: Vector2(_arenaWidth, _arenaHeight),
     );
-    stick = ControlStick(position: Vector2(120, 612));
+    moveStick = ControlStick(position: Vector2(120, 612));
+    aimStick = ControlStick.aim(position: Vector2(1160, 612));
     player = Player(
       position: Vector2(_arenaWidth / 2, _arenaHeight - 90),
       size: _playerSize,
-      joystick: stick,
+      moveStick: moveStick,
+      aimStick: aimStick,
+      gamepad: game.gamepad,
       onDefeated: _onPlayerShrunkAway,
     );
     boss = bossFor(
       level,
       aimAt: () => player.position,
       onDefeated: _onBossFinished,
-    );
-    fireButton = FireButton(
-      position: Vector2(1160, 612),
-      onHeldChanged: (held) => player.triggerHeld = held,
     );
     _shownHealth = player.health.current;
     _shownReadout = boss.readout;
@@ -121,8 +122,8 @@ class ArenaPage extends SlidePage {
         anchor: Anchor.center,
       )..flyIn(delay: 0.05),
       floor,
-      stick,
-      fireButton,
+      moveStick,
+      aimStick,
       _sizeReadout = TextComponent(
         text: _playerReadout,
         textRenderer: SlideText.showBody,
@@ -138,7 +139,7 @@ class ArenaPage extends SlidePage {
         anchor: Anchor.centerRight,
       ),
       _controlsHint = TextComponent(
-        text: 'Move with the stick or WASD. Fire with the button or Space.',
+        text: 'Left stick or WASD to move. Right stick or arrows to aim and fire.',
         textRenderer: SlideText.showBody,
         position: Vector2(kSlideWidth / 2, 598),
         anchor: Anchor.center,
@@ -193,9 +194,8 @@ class ArenaPage extends SlidePage {
     // Freeze the board rather than tearing it down, so the last moment of the
     // fight stays on screen behind the dialog.
     floor.pause();
-    player.triggerHeld = false;
-    stick.removeFromParent();
-    fireButton.removeFromParent();
+    moveStick.removeFromParent();
+    aimStick.removeFromParent();
     // The hint would otherwise outlive the controls it describes.
     _controlsHint.removeFromParent();
 

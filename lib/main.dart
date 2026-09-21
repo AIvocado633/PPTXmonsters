@@ -2,6 +2,7 @@ import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:gamepads/gamepads.dart';
 
 import 'game/pptx_monsters_game.dart';
 import 'game/theme/palette.dart';
@@ -36,9 +37,12 @@ class PptxMonstersApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Palette.workspace,
       ),
-      home: const Scaffold(
+      home: Scaffold(
         backgroundColor: Palette.workspace,
-        body: GameWidget.controlled(gameFactory: PptxMonstersGame.new),
+        body: GameWidget.controlled(
+          gameFactory: () =>
+              PptxMonstersGame(gamepadEvents: Gamepads.normalizedEvents),
+        ),
       ),
     );
   }

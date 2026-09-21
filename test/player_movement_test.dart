@@ -140,13 +140,13 @@ void main() {
     );
   });
 
-  group('thumb stick', () {
+  group('move stick', () {
     test('adds its push to the keyboard and stays capped at full tilt', () {
-      final stick = _StubStick();
+      final stick = StubStick();
       final player = Player(
         position: Vector2.zero(),
         size: 100,
-        joystick: stick,
+        moveStick: stick,
       );
 
       // Half tilt east.
@@ -162,26 +162,16 @@ void main() {
     });
 
     testWithGame<PptxMonstersGame>(
-      'is on the arena page and wired to the player',
+      'sits on the arena page beside the aim stick, both wired to the player',
       PptxMonstersGame.new,
       (game) async {
         final arena = await openArena(game);
-        final sticks = arena.children.whereType<ControlStick>();
 
-        expect(sticks.length, 1);
-        expect(arena.player.joystick, same(sticks.single));
+        expect(arena.children.whereType<ControlStick>().length, 2);
+        expect(arena.player.moveStick, same(arena.moveStick));
+        expect(arena.player.aimStick, same(arena.aimStick));
+        expect(arena.player.gamepad, same(game.gamepad));
       },
     );
   });
-}
-
-/// A stick whose push can be set directly, so the player's handling of it can
-/// be tested without synthesising drag gestures.
-class _StubStick extends ControlStick {
-  _StubStick() : super(position: Vector2.zero());
-
-  Vector2 push = Vector2.zero();
-
-  @override
-  Vector2 get relativeDelta => push;
 }

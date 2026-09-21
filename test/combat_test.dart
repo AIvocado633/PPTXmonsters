@@ -230,8 +230,8 @@ void main() {
         await game.ready();
 
         expect(arena.children.whereType<ResultPanel>().length, 1);
-        expect(arena.stick.isMounted, isFalse);
-        expect(arena.fireButton.isMounted, isFalse);
+        expect(arena.moveStick.isMounted, isFalse);
+        expect(arena.aimStick.isMounted, isFalse);
       },
     );
 

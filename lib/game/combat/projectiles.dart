@@ -34,6 +34,14 @@ abstract class Projectile extends PositionComponent with CollisionCallbacks {
   int get damage => 1;
 
   @override
+  void onMount() {
+    super.onMount();
+    // Point the way it is travelling. With free aiming a shot can go anywhere,
+    // and a bullet point flying north-west should point north-west.
+    angle = math.atan2(velocity.y, velocity.x);
+  }
+
+  @override
   void update(double dt) {
     super.update(dt);
     position += velocity * dt;
@@ -110,13 +118,6 @@ class ConnectorArrow extends EnemyShot {
   static const double speed = 340;
 
   final Paint _paint = Paint()..color = Palette.smartArt;
-
-  @override
-  void onMount() {
-    super.onMount();
-    // Point the arrow the way it is travelling.
-    angle = math.atan2(velocity.y, velocity.x);
-  }
 
   @override
   void render(Canvas canvas) {

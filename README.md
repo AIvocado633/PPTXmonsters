@@ -16,9 +16,25 @@ Slide 1 is playable end to end. The other five bosses are named but not built.
   ribbon, status bar, dashed placeholders and staggered "Fly In" entrances.
 - **Slide sorter** — level select, showing the six bosses; only the first is
   unlocked.
-- **Slide show** — two fights so far, AutoFit and SmartArt. Move with the stick
-  or WASD and shoot bullet points with the button or Space.
+- **Slide show** — two fights so far, AutoFit and SmartArt, with twin-stick
+  controls (see below).
 - **Design Ideas** — a settings pane with nothing wired up yet.
+
+### Controls
+
+Twin-stick: one input moves, the other aims, and pushing the aim in any
+direction fires that way immediately — there is no fire button.
+
+|          | Touch             | Keyboard   | Controller  |
+| -------- | ----------------- | ---------- | ----------- |
+| **Move** | left thumb stick  | WASD       | left stick  |
+| **Aim**  | right thumb stick | arrow keys | right stick |
+
+All three work at once, so you can pick up a controller mid-fight. Space still
+fires along the way you are walking, for anyone who would rather not aim.
+Controllers come through the Flame team's
+[`gamepads`](https://pub.dev/packages/gamepads) package, whose normalized
+events map every platform's pad onto the same Xbox-style layout.
 
 Each fight is built out of the feature's own behaviour rather than out of a
 health bar with a new sprite on it.
