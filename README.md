@@ -1,5 +1,7 @@
 # PPTX Monsters
 
+[![CI](https://github.com/AIvocado633/PPTXmonsters/actions/workflows/ci.yml/badge.svg)](https://github.com/AIvocado633/PPTXmonsters/actions/workflows/ci.yml)
+
 A 2D mobile game about defeating the PowerPoint features that defeated you.
 
 Each level is a slide. Each boss is a feature — AutoFit, SmartArt, the Slide
@@ -103,6 +105,11 @@ slide just letterboxes inside whatever shape it is given.
 flutter test      # unit and layout tests
 flutter analyze   # lints
 ```
+
+CI runs both on every pull request, alongside debug builds for Android and
+Windows — see [`.github/workflows/ci.yml`](.github/workflows/ci.yml). The
+workflow pins the Flutter version, so bump it together with `.metadata` when
+upgrading the SDK.
 
 To preview in a browser instead, add the web platform back with
 `flutter create --platforms=web .`.

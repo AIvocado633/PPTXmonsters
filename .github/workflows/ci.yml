@@ -1,0 +1,81 @@
+# Checks every pull request, and main after each merge.
+#
+# Flutter is pinned to the version the project is built with -- the revision
+# recorded in .metadata. Bump FLUTTER_VERSION and .metadata together when
+# upgrading the SDK.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to a pull request makes its older run pointless. Runs on main
+# are left to finish, so every merge shows whether it broke anything.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: 3.41.6
+
+jobs:
+  test:
+    name: Analyze and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      # Fails, rather than quietly re-resolving, if pubspec.lock is out of date.
+      - run: flutter pub get --enforce-lockfile
+      # Infos and warnings are fatal by default, and the tree is clean.
+      - run: flutter analyze
+      - run: flutter test
+
+  android:
+    # Several tests read the Android files as text, but only a real Gradle
+    # build catches a broken manifest merge or plugin registration.
+    name: Android debug build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter build apk --debug
+
+  windows:
+    # Windows is the everyday target through run-windows.bat, and the gamepads
+    # plugin brings native code of its own to compile.
+    #
+    # Pinned to Visual Studio 2022, the toolchain the project is built with.
+    # windows-latest ships Visual Studio 2026, which audioplayers_windows (under
+    # flame_audio) only compiles with from 4.4.1 -- and that needs Flutter 3.44.
+    # Move back to windows-latest once the SDK upgrade lands.
+    name: Windows debug build
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter build windows --debug
