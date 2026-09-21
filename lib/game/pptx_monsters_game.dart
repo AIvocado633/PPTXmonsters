@@ -14,6 +14,8 @@ import 'pages/main_menu_page.dart';
 import 'pages/slide_sorter_page.dart';
 import 'levels.dart';
 import 'routes.dart';
+import 'save/save_file.dart';
+import 'save/save_store.dart';
 import 'theme/palette.dart';
 
 /// Root of the game.
@@ -26,13 +28,23 @@ import 'theme/palette.dart';
 /// what makes the game playable on desktop without a touch stick.
 class PptxMonstersGame extends FlameGame
     with HasKeyboardHandlerComponents, HasCollisionDetection {
-  PptxMonstersGame({Stream<NormalizedGamepadEvent>? gamepadEvents})
-    : _gamepadEvents = gamepadEvents;
+  PptxMonstersGame({
+    Stream<NormalizedGamepadEvent>? gamepadEvents,
+    SaveStore? saveStore,
+  }) : _gamepadEvents = gamepadEvents,
+       _saveStore = saveStore ?? InMemorySaveStore();
 
   /// Controller events to follow. The app passes the real platform stream;
   /// tests leave it null, so building a game never touches a platform channel.
   final Stream<NormalizedGamepadEvent>? _gamepadEvents;
   StreamSubscription<NormalizedGamepadEvent>? _gamepadSubscription;
+
+  /// Where the save is kept. The app passes the device's own store; tests
+  /// leave it null and get a fresh one in memory, for the same reason.
+  final SaveStore _saveStore;
+
+  /// What the player has done so far, loaded before the first page is shown.
+  late final SaveFile save;
 
   /// The connected controller's sticks, shared by every page.
   final GamepadInput gamepad = GamepadInput();
@@ -49,6 +61,8 @@ class PptxMonstersGame extends FlameGame
       // A controller failing should cost you the controller, not the game.
       onError: (Object error) => debugPrint('Gamepad input failed: $error'),
     );
+    // Before any page exists, so none renders with defaults and then flips.
+    save = await SaveFile.load(_saveStore);
     await add(
       router = RouterComponent(
         initialRoute: Routes.normalView,

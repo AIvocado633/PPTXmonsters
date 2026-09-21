@@ -37,6 +37,7 @@ dependencies:
   flame: ^1.38.2
   flame_audio: ^2.12.2
   gamepads: ^0.1.12
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:
@@ -49,6 +50,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flame_test: ^2.3.1
+  shared_preferences_platform_interface: ^2.4.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
