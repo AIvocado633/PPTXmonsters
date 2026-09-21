@@ -1,3 +1,7 @@
+import 'combat/autofit_boss.dart';
+import 'combat/boss.dart';
+import 'combat/smartart_boss.dart';
+
 /// The deck the player has to get through.
 ///
 /// Each level is one slide, and each boss is a PowerPoint feature that has
@@ -9,10 +13,12 @@ class LevelDefinition {
     required this.tagline,
     required this.winLine,
     required this.lossLine,
-    this.unlocked = false,
+    this.buildBoss,
   });
 
   final int number;
+
+  /// The feature's name, as the slide sorter and the arena show it.
   final String boss;
 
   /// One line on the slide sorter thumbnail.
@@ -24,9 +30,13 @@ class LevelDefinition {
   /// How the feature got you, shown when the slide is lost.
   final String lossLine;
 
-  /// Whether the level can be played. For now this tracks whether its boss has
-  /// actually been built; `deck_test` fails if the two ever disagree.
-  final bool unlocked;
+  /// Builds the feature standing in the way, or null while its fight has not
+  /// been written yet.
+  final BossBuilder? buildBoss;
+
+  /// Whether this slide's fight exists in this build of the game. Whether the
+  /// player has earned it yet is a separate question.
+  bool get isBuilt => buildBoss != null;
 }
 
 /// The level with this [LevelDefinition.number].
@@ -40,7 +50,7 @@ const List<LevelDefinition> kLevels = [
     tagline: 'Shrinks your text on sight',
     winLine: 'AutoFit shrank itself out of the deck. One feature down.',
     lossLine: 'AutoFit shrank you until you no longer fit on the slide.',
-    unlocked: true,
+    buildBoss: AutoFitBoss.new,
   ),
   LevelDefinition(
     number: 2,
@@ -48,7 +58,7 @@ const List<LevelDefinition> kLevels = [
     tagline: 'Neither smart nor art',
     winLine: 'SmartArt ran out of shapes to rearrange. Two features down.',
     lossLine: 'SmartArt rearranged the slide until there was no room for you.',
-    unlocked: true,
+    buildBoss: SmartArtBoss.new,
   ),
   LevelDefinition(
     number: 3,

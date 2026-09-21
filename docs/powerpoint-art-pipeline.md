@@ -119,5 +119,6 @@ That message disappears on its own once the frames are in place.
 1. Draw it in a new deck, one pose per slide.
 2. Export as `<actor>_idle_000.png`, … into `assets/images/`.
 3. Add a `PptxActor(artPrefix: '<actor>_idle_')` where you want it.
-4. If it is a boss, add it to `kLevels` in
-   [`lib/game/levels.dart`](../lib/game/levels.dart).
+4. If it is a boss, set its slide's `buildBoss` in `kLevels`, in
+   [`lib/game/levels.dart`](../lib/game/levels.dart), to its constructor. The
+   arena needs no changes.

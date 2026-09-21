@@ -1,25 +1,40 @@
 import 'package:flame/components.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pptx_monsters/game/combat/boss.dart';
 import 'package:pptx_monsters/game/levels.dart';
 import 'package:pptx_monsters/game/pages/arena_page.dart';
 
 /// Guards the deck as a whole, rather than any one fight.
 void main() {
   group('the deck', () {
-    test('has a boss built for every level it lets you open', () {
-      for (final level in kLevels.where((level) => level.unlocked)) {
+    test('builds the boss of every slide that has one', () {
+      // Each fight's own tests play it in a running game. This only checks
+      // that no builder throws, which covers bosses that have no tests yet.
+      final context = BossContext(
+        arenaSize: Vector2(900, 420),
+        aimAt: Vector2.zero,
+        onDefeated: () {},
+      );
+      for (final level in kLevels.where((level) => level.isBuilt)) {
         expect(
-          () => ArenaPage.bossFor(
-            level,
-            aimAt: Vector2.zero,
-            onDefeated: () {},
-          ),
+          () => level.buildBoss!(context),
           returnsNormally,
-          reason:
-              'slide ${level.number} (${level.boss}) is unlocked but has no '
-              'boss; either build it or lock the level again',
+          reason: 'slide ${level.number} (${level.boss}) fails to build',
         );
       }
+    });
+
+    test('refuses to open a slide whose fight has not been built', () {
+      const unbuilt = LevelDefinition(
+        number: 99,
+        boss: 'Nothing yet',
+        tagline: '',
+        winLine: '',
+        lossLine: '',
+      );
+
+      expect(unbuilt.isBuilt, isFalse);
+      expect(() => ArenaPage(level: unbuilt), throwsAssertionError);
     });
 
     test('numbers its levels from one, in order, with no gaps', () {
@@ -28,12 +43,14 @@ void main() {
       }
     });
 
-    test('unlocks a contiguous run from the front', () {
-      final unlocked = kLevels.map((level) => level.unlocked).toList();
+    test('builds a contiguous run of slides from the front', () {
+      final built = kLevels.map((level) => level.isBuilt).toList();
       expect(
-        unlocked.skipWhile((isUnlocked) => isUnlocked),
+        built.skipWhile((isBuilt) => isBuilt),
         everyElement(isFalse),
-        reason: 'a locked level sits before an unlocked one',
+        reason:
+            'a slide with no fight sits before one with a fight, so the deck '
+            'could not be played in order',
       );
     });
   });

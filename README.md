@@ -12,12 +12,13 @@ Built with Flutter and the [Flame](https://flame-engine.org) engine.
 
 ## Status
 
-Slide 1 is playable end to end. The other five bosses are named but not built.
+Slides 1 and 2 are playable end to end. The other four bosses are named but
+not built.
 
 - **Start menu** — a title slide in PowerPoint's normal editing view, with
   ribbon, status bar, dashed placeholders and staggered "Fly In" entrances.
-- **Slide sorter** — level select, showing the six bosses; only the first is
-  unlocked.
+- **Slide sorter** — level select, showing all six slides. The two with a
+  fight open; the rest stay locked until their boss is built.
 - **Slide show** — two fights so far, AutoFit and SmartArt, with twin-stick
   controls (see below).
 - **Design Ideas** — a settings pane with nothing wired up yet.
@@ -122,7 +123,7 @@ lib/
   game/
     pptx_monsters_game.dart  FlameGame + RouterComponent; one route per screen
     routes.dart              Route names
-    levels.dart              The six bosses
+    levels.dart              The six slides, and the boss each one builds
     slide/
       slide_metrics.dart     The 1280x720 design canvas and its margins
       slide_page.dart        Base page: scales and letterboxes the slide

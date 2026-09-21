@@ -24,14 +24,13 @@ enum SmartArtLayout { cycle, process, hierarchy, pyramid }
 /// throwing your aim away -- which is precisely what SmartArt does to a slide
 /// the moment you add or remove a line.
 class SmartArtBoss extends Boss {
-  SmartArtBoss({
-    required super.position,
-    required super.aimAt,
-    required super.onDefeated,
-    this.shapeCount = 6,
-    int? seed,
-  }) : _random = math.Random(seed),
-       super(size: Vector2(460, 230));
+  /// Spreads across the top of the arena, centred.
+  SmartArtBoss(super.context, {this.shapeCount = 6, int? seed})
+    : _random = math.Random(seed),
+      super(
+        position: Vector2(context.arenaSize.x / 2, 140),
+        size: Vector2(460, 230),
+      );
 
   /// How many shapes the diagram starts with.
   final int shapeCount;

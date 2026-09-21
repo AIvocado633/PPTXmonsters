@@ -30,7 +30,7 @@ void main() {
     Routes.slideSorter,
     Routes.designIdeas,
     // Every playable level, so a new boss cannot quietly overflow a slide.
-    for (final level in kLevels.where((level) => level.unlocked))
+    for (final level in kLevels.where((level) => level.isBuilt))
       Routes.slideShowFor(level.number),
   ]) {
     group(route, () {
