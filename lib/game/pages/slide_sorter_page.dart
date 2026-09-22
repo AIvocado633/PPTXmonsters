@@ -18,10 +18,13 @@ import '../theme/slide_text.dart';
 
 /// Level select, dressed as PowerPoint's slide sorter view.
 class SlideSorterPage extends SlidePage {
-  static const double _thumbWidth = 300;
-  static const double _thumbHeight = 169;
+  static const double _thumbWidth = 280;
+  static const double _thumbHeight = 158;
   static const double _gapX = 40;
-  static const double _gapY = 70;
+
+  /// Room for a row's two caption lines and the next row's slide numbers,
+  /// which sit above their thumbnails.
+  static const double _gapY = 106;
   static const int _columns = 3;
   static const double _gridTop = 190;
 

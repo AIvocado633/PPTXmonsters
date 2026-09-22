@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
@@ -7,6 +8,7 @@ import 'package:pptx_monsters/game/components/autoshape_backdrop.dart';
 import 'package:pptx_monsters/game/components/ribbon_bar.dart';
 import 'package:pptx_monsters/game/components/status_bar.dart';
 import 'package:pptx_monsters/game/levels.dart';
+import 'package:pptx_monsters/game/pages/slide_sorter_page.dart';
 import 'package:pptx_monsters/game/pptx_monsters_game.dart';
 import 'package:pptx_monsters/game/routes.dart';
 import 'package:pptx_monsters/game/slide/slide_metrics.dart';
@@ -89,7 +91,40 @@ void main() {
       );
     });
   }
+
+  // Text is left out above because its width is meaningless under the test
+  // font. Its height is not, so rows of the sorter can still be checked for
+  // captions running into the slide numbers of the row below.
+  testWithGame<PptxMonstersGame>(
+    'slide sorter keeps each row of captions clear of the next row',
+    PptxMonstersGame.new,
+    (game) async {
+      final sorter = await settle(game, Routes.slideSorter);
+
+      final thumbnails = sorter.children.whereType<SlideThumbnail>().toList();
+      for (final upper in thumbnails) {
+        for (final lower in thumbnails) {
+          if (lower.position.x != upper.position.x ||
+              lower.position.y <= upper.position.y) {
+            continue;
+          }
+          final upperBottom = _texts(upper).map((r) => r.bottom).reduce(max);
+          final lowerTop = _texts(lower).map((r) => r.top).reduce(min);
+          expect(
+            lowerTop,
+            greaterThanOrEqualTo(upperBottom),
+            reason:
+                'slide ${lower.level.number} runs into the captions of '
+                'slide ${upper.level.number}',
+          );
+        }
+      }
+    },
+  );
 }
+
+Iterable<Rect> _texts(SlideThumbnail thumbnail) =>
+    thumbnail.children.whereType<TextComponent>().map(absoluteRect);
 
 /// Pushes [route], runs the entrance animations to completion and returns the
 /// page, with the game sized to exactly one slide so absolute positions are
