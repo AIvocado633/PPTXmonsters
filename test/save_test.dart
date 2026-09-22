@@ -1,5 +1,6 @@
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pptx_monsters/game/components/player.dart';
 import 'package:pptx_monsters/game/pptx_monsters_game.dart';
 import 'package:pptx_monsters/game/save/save_data.dart';
 import 'package:pptx_monsters/game/save/save_file.dart';
@@ -128,12 +129,14 @@ void main() {
         final arena = await openArena(game);
 
         arena.player.takeHit(arena.player.health.max);
-        // Beating the boss afterwards changes nothing: the slide is lost.
+        // Beating the boss afterwards changes nothing: the slide is lost the
+        // moment the player is, even though the exit animation runs first.
         arena.boss.takeHit(arena.boss.totalHits);
-        advance(game, 0.6);
+        advance(game, Player.exitDuration + 0.2);
         await game.ready();
         await Future<void>.delayed(Duration.zero);
 
+        expect(arena.isResolved, isTrue);
         expect(game.save.data.progress.beaten, isEmpty);
         expect(losing.document, isNull);
       },

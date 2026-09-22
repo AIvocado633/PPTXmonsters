@@ -145,4 +145,9 @@ abstract final class SlideText {
   static final showBody = TextPaint(
     style: _style(size: 22, color: Color(0xFFBDBDBD)),
   );
+
+  /// What a hit cost, floating off whatever was hit. Takes its colour from
+  /// the side of the fight that paid it.
+  static TextPaint damage(Color colour) =>
+      TextPaint(style: _style(size: 20, weight: FontWeight.w700, color: colour));
 }

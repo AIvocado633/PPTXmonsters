@@ -10,6 +10,7 @@ import '../components/pptx_actor.dart';
 import '../theme/palette.dart';
 import 'boss.dart';
 import 'health.dart';
+import 'impact.dart';
 import 'projectiles.dart';
 
 /// The layouts SmartArt cycles through. Picking one has never been the hard
@@ -39,7 +40,10 @@ class SmartArtBoss extends Boss {
 
   static const double nodeSize = 64;
   static const int hitsPerShape = 2;
-  static const double _fireInterval = 1.2;
+
+  /// Seconds between thrown connector arrows. Longer than the player's mercy
+  /// window, so a single stream of shots always lands.
+  static const double fireInterval = 1.2;
   static const double _reflowDuration = 0.55;
 
   SmartArtLayout get layout => _layout;
@@ -85,7 +89,7 @@ class SmartArtBoss extends Boss {
       return;
     }
     _sinceLastShot += dt;
-    if (_sinceLastShot >= _fireInterval) {
+    if (_sinceLastShot >= fireInterval) {
       _sinceLastShot = 0;
       _throwConnector();
     }
@@ -319,10 +323,12 @@ class SmartArtNode extends PositionComponent with CollisionCallbacks {
     ..style = PaintingStyle.stroke
     ..strokeWidth = 3;
 
+  late final PptxActor _actor;
+
   @override
   Future<void> onLoad() async {
     await add(
-      PptxActor(
+      _actor = PptxActor(
         artPrefix: 'smartart_idle_',
         tint: Palette.smartArt,
         position: size / 2,
@@ -352,10 +358,23 @@ class SmartArtNode extends PositionComponent with CollisionCallbacks {
     }
     health.damage(amount);
     scale = Vector2.all(health.scale);
+    Impact.hit(_actor);
     if (!health.isDead) {
       return;
     }
     _broken = true;
+    // SmartArt counts itself in shapes, so that is what a break costs it.
+    final diagram = parent;
+    if (diagram is SmartArtBoss) {
+      final board = diagram.parent;
+      if (board != null) {
+        Impact.damage(
+          board,
+          diagram.arenaPositionOf(this) - Vector2(0, SmartArtBoss.nodeSize),
+          '−1 shape',
+        );
+      }
+    }
     // Out of the fight immediately, so the reflow it triggers already sees the
     // new shape count, but left on screen briefly so the break is visible.
     onBroken();

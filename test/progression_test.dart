@@ -1,6 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pptx_monsters/game/components/player.dart';
 import 'package:pptx_monsters/game/components/chip_button.dart';
 import 'package:pptx_monsters/game/components/menu_bullet_button.dart';
 import 'package:pptx_monsters/game/components/result_panel.dart';
@@ -181,6 +182,7 @@ void main() {
       (game) async {
         final arena = await openArena(game);
         arena.player.takeHit(arena.player.health.max);
+        advance(game, Player.exitDuration + 0.1);
         await game.ready();
 
         expect(_labels(_panel(game)), ['Retry Slide', 'End Show']);
