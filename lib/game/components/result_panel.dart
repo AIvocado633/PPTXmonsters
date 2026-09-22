@@ -14,6 +14,7 @@ class ResultPanel extends PositionComponent {
     required this.message,
     required this.onRetry,
     required this.onLeave,
+    this.onNext,
     this.won = true,
   }) : super(position: position, size: Vector2(580, 260), anchor: Anchor.center);
 
@@ -21,6 +22,10 @@ class ResultPanel extends PositionComponent {
   final String message;
   final void Function() onRetry;
   final void Function() onLeave;
+
+  /// Goes on to the next slide. When set, Next Slide is offered first, as the
+  /// primary action; when null, Retry Slide takes its place.
+  final void Function()? onNext;
   final bool won;
 
   static const double _headerHeight = 58;
@@ -47,21 +52,29 @@ class ResultPanel extends PositionComponent {
         position: Vector2(width / 2, 118),
         anchor: Anchor.center,
       ),
-      ChipButton(
-        label: 'Retry Slide',
-        filled: true,
-        position: Vector2(180, 192),
-        anchor: Anchor.center,
-        width: 180,
-        onSelected: onRetry,
-      ),
-      ChipButton(
-        label: 'End Show',
-        position: Vector2(400, 192),
-        anchor: Anchor.center,
-        width: 180,
-        onSelected: onLeave,
-      ),
+    ]);
+
+    final next = onNext;
+    final actions = [
+      if (next != null) (label: 'Next Slide', onSelected: next),
+      (label: 'Retry Slide', onSelected: onRetry),
+      (label: 'End Show', onSelected: onLeave),
+    ];
+    // Buttons share the width evenly, centred, with the first one filled.
+    final buttonWidth = actions.length == 3 ? 166.0 : 180.0;
+    final gap = actions.length == 3 ? 16.0 : 40.0;
+    final rowWidth = actions.length * buttonWidth + (actions.length - 1) * gap;
+    final left = (width - rowWidth) / 2 + buttonWidth / 2;
+    await addAll([
+      for (final (index, action) in actions.indexed)
+        ChipButton(
+          label: action.label,
+          filled: index == 0,
+          position: Vector2(left + index * (buttonWidth + gap), 192),
+          anchor: Anchor.center,
+          width: buttonWidth,
+          onSelected: action.onSelected,
+        ),
     ]);
   }
 

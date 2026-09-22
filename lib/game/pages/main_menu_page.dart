@@ -8,6 +8,7 @@ import '../components/placeholder_frame.dart';
 import '../components/pptx_actor.dart';
 import '../components/ribbon_bar.dart';
 import '../components/status_bar.dart';
+import '../levels.dart';
 import '../routes.dart';
 import '../slide/fly_in.dart';
 import '../slide/slide_metrics.dart';
@@ -22,20 +23,43 @@ class MainMenuPage extends SlidePage {
   static const double _panelLeft = 840;
   static const double _panelWidth = 364;
 
+  /// The parts of the slide that show progress, rebuilt when it changes.
+  late StatusBar _statusBar;
+  late MenuBulletButton _startButton;
+  late TextComponent _footer;
+
   @override
   Future<void> onLoad() async {
     await addAll([
       AutoshapeBackdrop(seed: 7),
       RibbonBar(activeTab: 'Slide Show'),
-      StatusBar(slideLabel: 'Slide 1 of 6'),
+      _statusBar = _buildStatusBar(),
     ]);
 
     await add(_buildTitle());
     await add(_buildSubtitle());
     await addAll(_buildMenu());
     await add(_buildDesignIdeasPanel());
-    await add(_buildFooter());
+    await add((_footer = _buildFooter())..flyIn(delay: 0.5));
   }
+
+  /// Swaps in the new versions where they stand, without flying them in
+  /// again: the slide has already been built once.
+  @override
+  void onProgressChanged() {
+    _statusBar.removeFromParent();
+    _startButton.removeFromParent();
+    _footer.removeFromParent();
+    addAll([
+      _statusBar = _buildStatusBar(),
+      _startButton = _buildStartButton(),
+      _footer = _buildFooter(),
+    ]);
+  }
+
+  StatusBar _buildStatusBar() => StatusBar(
+    slideLabel: 'Slide ${game.deck.currentSlide} of ${kLevels.length}',
+  );
 
   PositionComponent _buildTitle() {
     final frame = PlaceholderFrame(
@@ -75,37 +99,51 @@ class MainMenuPage extends SlidePage {
   }
 
   List<PositionComponent> _buildMenu() {
-    final entries = <({String label, String? hint, String route, bool enabled})>[
-      (
-        label: 'Start Slide Show',
-        hint: 'F5',
-        route: Routes.slideShowFor(1),
-        enabled: true,
-      ),
+    final entries = <({String label, String? hint, String route})>[
       (
         label: 'Slide Sorter',
         hint: 'Levels',
         route: Routes.slideSorter,
-        enabled: true,
       ),
       (
         label: 'Design Ideas',
         hint: 'Settings',
         route: Routes.designIdeas,
-        enabled: true,
       ),
     ];
 
     return [
+      (_startButton = _buildStartButton())..flyIn(delay: 0.24),
       for (final (index, entry) in entries.indexed)
         MenuBulletButton(
           label: entry.label,
           hint: entry.hint,
-          enabled: entry.enabled,
-          position: Vector2(_titleLeft - 4, 336 + index * 78),
+          position: _menuEntryPosition(index + 1),
           onSelected: () => game.router.pushNamed(entry.route),
-        )..flyIn(delay: 0.24 + index * 0.08),
+        )..flyIn(delay: 0.24 + (index + 1) * 0.08),
     ];
+  }
+
+  static Vector2 _menuEntryPosition(int index) =>
+      Vector2(_titleLeft - 4, 336 + index * 78);
+
+  /// Starts the show where PowerPoint would: from the beginning until there
+  /// is progress, then from the first slide not won yet, and from the
+  /// beginning again once every built slide has been.
+  MenuBulletButton _buildStartButton() {
+    final deck = game.deck;
+    final resume = deck.resumeSlide;
+    final entry = !deck.hasProgress
+        ? (label: 'Start Slide Show', hint: 'F5', slide: kLevels.first.number)
+        : resume == null
+        ? (label: 'From Beginning', hint: 'F5', slide: kLevels.first.number)
+        : (label: 'From Current Slide', hint: 'Shift+F5', slide: resume);
+    return MenuBulletButton(
+      label: entry.label,
+      hint: entry.hint,
+      position: _menuEntryPosition(0),
+      onSelected: () => game.router.pushNamed(Routes.slideShowFor(entry.slide)),
+    );
   }
 
   PositionComponent _buildDesignIdeasPanel() {
@@ -151,13 +189,28 @@ class MainMenuPage extends SlidePage {
     return panel..flyIn(from: Vector2(120, 0), delay: 0.3);
   }
 
-  PositionComponent _buildFooter() {
+  TextComponent _buildFooter() {
     return TextComponent(
-      text: 'Six features stand between you and the end of the deck.',
+      text: footerLine(game.deck.featuresLeft),
       textRenderer: SlideText.caption,
       position: Vector2(_titleLeft + 30, 610),
       anchor: Anchor.centerLeft,
-    )..flyIn(delay: 0.5);
+    );
+  }
+
+  static const _counts = ['One', 'Two', 'Three', 'Four', 'Five', 'Six'];
+
+  /// The footer, counting down the features still in the way.
+  static String footerLine(int featuresLeft) {
+    if (featuresLeft == 0) {
+      return 'Nothing stands between you and the end of the deck.';
+    }
+    final count = featuresLeft <= _counts.length
+        ? _counts[featuresLeft - 1]
+        : '$featuresLeft';
+    return featuresLeft == 1
+        ? '$count feature stands between you and the end of the deck.'
+        : '$count features stand between you and the end of the deck.';
   }
 }
 

@@ -17,11 +17,30 @@ not built.
 
 - **Start menu** — a title slide in PowerPoint's normal editing view, with
   ribbon, status bar, dashed placeholders and staggered "Fly In" entrances.
-- **Slide sorter** — level select, showing all six slides. The two with a
-  fight open; the rest stay locked until their boss is built.
+- **Slide sorter** — level select, showing all six slides (see *Progression*
+  below).
 - **Slide show** — two fights so far, AutoFit and SmartArt, with twin-stick
   controls (see below).
 - **Design Ideas** — a settings pane with nothing wired up yet.
+
+### Progression
+
+The deck is played in order. Slide 1 is always open; every other slide opens
+once the one before it is won, and stays open, because wins are saved on the
+device. Any slide you have opened can be replayed.
+
+- **Slide sorter** — each thumbnail shows where its slide stands: a star
+  under a slide you have beaten (the mark PowerPoint gives slides with
+  animations), a plain slide when it is open, a greyed-out slide with a bolt
+  when it is locked, and a faded *hidden slide*, number struck through, when
+  its boss has not been built yet.
+- **Winning** a slide offers **Next Slide** first, then Retry Slide and End
+  Show. Beating the last slide that has been built ends on the same dialog
+  without Next Slide, until the rest of the deck exists.
+- **Start menu** — *Start Slide Show* (F5) on a fresh deck. Once you have won
+  something it becomes *From Current Slide* (Shift+F5) and opens the first
+  slide you have not won yet, which is also the slide the status bar shows.
+  The footer counts down the features still in the way.
 
 ### Controls
 
@@ -87,6 +106,16 @@ Progress is saved on the device as soon as a slide is won. On Windows it lives
 in `%APPDATA%\com.pptxmonsters\pptx_monsters\shared_preferences.json`; delete
 that file to start the deck over.
 
+To work on a boss without playing through the deck first, open every built
+slide with a developer switch:
+
+```bash
+flutter run --dart-define=UNLOCK_ALL=true
+```
+
+It changes what is open, never what is saved. Tests set the same switch
+through `PptxMonstersGame(unlockAll: true)`.
+
 Android, iOS and Windows are configured.
 
 The game is **landscape only**. The layout is a 16:9 slide, letterboxed onto
@@ -128,6 +157,7 @@ lib/
     pptx_monsters_game.dart  FlameGame + RouterComponent; one route per screen
     routes.dart              Route names
     levels.dart              The six slides, and the boss each one builds
+    deck.dart                Which slides are open, given what has been won
     slide/
       slide_metrics.dart     The 1280x720 design canvas and its margins
       slide_page.dart        Base page: scales and letterboxes the slide
