@@ -18,6 +18,10 @@ enum MenuAction {
   /// Esc, controller B, Android back.
   back,
 
+  /// B or `.`, controller Start: PowerPoint's blank-screen keys, which pause
+  /// a fight and let it go again.
+  pause,
+
   /// F5: start the show from the first slide.
   startFromBeginning,
 
@@ -54,6 +58,8 @@ MenuAction? menuActionForKey(
     LogicalKeyboardKey.numpadEnter ||
     LogicalKeyboardKey.space => MenuAction.activate,
     LogicalKeyboardKey.escape => MenuAction.back,
+    // PowerPoint blanks the screen on B, and on the period key beside it.
+    LogicalKeyboardKey.keyB || LogicalKeyboardKey.period => MenuAction.pause,
     LogicalKeyboardKey.f5 =>
       keysPressed.contains(LogicalKeyboardKey.shiftLeft) ||
               keysPressed.contains(LogicalKeyboardKey.shiftRight)
@@ -64,11 +70,10 @@ MenuAction? menuActionForKey(
 }
 
 /// The menu action a controller button stands for, or null for the rest.
-///
-/// Start is left free for pausing the show (#10).
 MenuAction? menuActionForButton(GamepadButton button) => switch (button) {
   GamepadButton.a => MenuAction.activate,
   GamepadButton.b => MenuAction.back,
+  GamepadButton.start => MenuAction.pause,
   GamepadButton.dpadUp => MenuAction.up,
   GamepadButton.dpadDown => MenuAction.down,
   GamepadButton.dpadLeft => MenuAction.left,

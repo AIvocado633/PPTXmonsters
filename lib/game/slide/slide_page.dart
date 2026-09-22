@@ -32,6 +32,10 @@ abstract class SlidePage extends PositionComponent
     ..color = Palette.slideShadow
     ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
 
+  /// Called when the app stops being in front -- backgrounded on a phone, or
+  /// the window losing focus on a desktop. A running fight pauses here.
+  void onAppBackgrounded() {}
+
   /// Called when the player's progress changes while this page exists, e.g.
   /// when a slide is won on a page pushed on top of it. Pages that show
   /// progress rebuild those parts here; they built them first in `onLoad`.
@@ -103,7 +107,10 @@ abstract class SlidePage extends PositionComponent
         }
       case MenuAction.back:
         onBack();
-      case MenuAction.startFromBeginning || MenuAction.startFromCurrent:
+      // Only a running slide show pauses, and only the title slide starts one.
+      case MenuAction.pause ||
+          MenuAction.startFromBeginning ||
+          MenuAction.startFromCurrent:
         break;
     }
   }

@@ -52,6 +52,7 @@ direction fires that way immediately — there is no fire button.
 | **Move**  | left thumb stick  | WASD                             | left stick          |
 | **Aim**   | right thumb stick | arrow keys                       | right stick         |
 | **Menus** | tap               | arrows, Enter or Space, Esc      | D-pad or left stick, A, B |
+| **Pause** | Pause chip        | B or `.`                         | Start               |
 
 All three work at once, so you can pick up a controller mid-fight.
 
@@ -59,8 +60,28 @@ Menus work without touching the screen. Arrows, the D-pad or the left stick
 move focus, drawn as a PowerPoint selection; the slide sorter moves across its
 grid. Enter, Space or A chooses, and Esc or B goes back. On the start menu,
 F5 starts the show from the beginning and Shift+F5 from the current slide, as
-in PowerPoint. Mid-fight, Esc or B ends the show. On Android the back gesture
-goes back a step, and only leaves the app from the title slide. Space still
+in PowerPoint. Mid-fight, Esc or B opens the pause menu (see below). On
+Android the back gesture goes back a step — during a fight it pauses instead —
+and only leaves the app from the title slide.
+
+### Pausing
+
+During a real slide show, **B** blanks the screen until you press it again, so
+that is what pausing looks like: the fight freezes behind a black slide
+offering Resume, Retry Slide and End Show. `.`, controller **Start** and the
+**Pause** chip do the same.
+
+Nothing advances while paused — movement, shot cooldowns, boss timers and
+shots already in the air all stop together, because the whole board is one
+frozen time scale — and resuming never fires a shot queued behind the menu.
+
+Leaving a fight takes two steps now: Esc, back or the **End Show** chip opens
+the pause menu with End Show already chosen, so one stray tap or key press
+cannot lose a fight. Pressing Esc again ends it, as in PowerPoint.
+
+The fight also pauses itself when the app goes away — a notification, a call,
+another app, or a desktop window losing focus — and stays paused on the way
+back, so nobody returns mid-dodge. Space still
 fires along the way you are walking, for anyone who would rather not aim.
 Controllers come through the Flame team's
 [`gamepads`](https://pub.dev/packages/gamepads) package, whose normalized

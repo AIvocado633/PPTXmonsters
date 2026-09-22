@@ -7,6 +7,7 @@ import '../combat/boss.dart';
 import '../components/arena_floor.dart';
 import '../components/chip_button.dart';
 import '../components/control_stick.dart';
+import '../components/pause_menu.dart';
 import '../components/player.dart';
 import '../components/result_panel.dart';
 import '../input/menu_input.dart';
@@ -123,14 +124,24 @@ class ArenaPage extends SlidePage {
         position: Vector2(kSlideWidth / 2, 598),
         anchor: Anchor.center,
       ),
-      ChipButton(
+      _pauseChip = ChipButton(
+        label: 'Pause',
+        position: Vector2(kSlideWidth - kSlideMargin - 162, 80),
+        anchor: Anchor.centerRight,
+        width: 120,
+        height: 44,
+        onSelected: pause,
+      ),
+      _endShowChip = ChipButton(
         label: 'End Show',
         filled: true,
         position: Vector2(kSlideWidth - kSlideMargin, 80),
         anchor: Anchor.centerRight,
         width: 150,
         height: 44,
-        onSelected: _leave,
+        // Leaving takes two taps: one stray tap on a chip should not lose a
+        // fight, so this opens the pause menu with End Show already chosen.
+        onSelected: () => pause(focusOnLeaving: true),
       ),
     ]);
   }
@@ -148,23 +159,103 @@ class ArenaPage extends SlidePage {
   double _resolvedFor = 0;
   bool _dialogFocused = false;
 
+  late final ChipButton _pauseChip;
+  late final ChipButton _endShowChip;
+  PauseMenu? _pauseMenu;
+
+  /// Whether the fight is frozen behind the blanked screen.
+  bool get isPaused => _pauseMenu != null;
+
+  /// Freezes the fight and blanks the slide, PowerPoint style.
+  ///
+  /// Does nothing once the slide has been decided, or while already paused,
+  /// so a second B is a resume rather than a second menu.
+  void pause({bool focusOnLeaving = false}) {
+    if (_resolved || isPaused) {
+      return;
+    }
+    // Everything that fights lives on the floor, so one time scale stops the
+    // board: movement, shot cooldowns, boss timers and projectiles alike.
+    floor.pause();
+    // The thumb sticks and the chips would otherwise sit under a blank
+    // screen, live.
+    moveStick.removeFromParent();
+    aimStick.removeFromParent();
+    _pauseChip.removeFromParent();
+    _endShowChip.removeFromParent();
+
+    final menu = PauseMenu(
+      onResume: resume,
+      onRetry: () => _replaceWith(level.number),
+      onLeave: _leave,
+    );
+    _pauseMenu = menu;
+    add(menu);
+    // Focus lands on the way out when the player asked to leave, and on the
+    // way back in otherwise.
+    menu.loaded.then((_) {
+      final buttons = menu.children.whereType<ChipButton>().toList();
+      if (buttons.isNotEmpty && isPaused) {
+        showFocusOn(focusOnLeaving ? buttons.last : buttons.first);
+      }
+    });
+  }
+
+  /// Picks the fight back up exactly where it stopped.
+  void resume() {
+    final menu = _pauseMenu;
+    if (menu == null) {
+      return;
+    }
+    menu.removeFromParent();
+    _pauseMenu = null;
+    // Keys held while paused -- Space to choose Resume, say -- must not come
+    // out as a shot the moment the board moves again.
+    player.stopFiring();
+    floor.resume();
+    addAll([moveStick, aimStick, _pauseChip, _endShowChip]);
+  }
+
+  /// A fight pauses itself when the app goes away, and stays paused on the
+  /// way back, so nobody returning from a notification is ambushed.
+  @override
+  void onAppBackgrounded() => pause();
+
   /// While fighting, nothing on the slide takes focus: the arrows aim. Once
-  /// the slide is decided, focus moves between the dialog's buttons only.
+  /// the slide is paused or decided, focus moves between that menu's buttons.
   @override
   List<Focusable> get focusables {
-    final panel = _panel;
-    if (panel == null) {
+    final dialog = _pauseMenu ?? _panel;
+    if (dialog == null) {
       return const [];
     }
-    return panel.children.whereType<ChipButton>().toList();
+    return dialog.children.whereType<ChipButton>().toList();
   }
 
   @override
   void onMenuAction(MenuAction action) {
+    if (isPaused) {
+      switch (action) {
+        // B and Start pick the fight back up, the way B unblanks a slide show.
+        case MenuAction.pause:
+          resume();
+        // A second Esc ends the show, as it would in PowerPoint.
+        case MenuAction.back:
+          _leave();
+        default:
+          super.onMenuAction(action);
+      }
+      return;
+    }
     if (!_resolved) {
-      // Esc and B end the show mid-fight; #10 turns this into a pause menu.
-      if (action == MenuAction.back) {
-        _leave();
+      switch (action) {
+        case MenuAction.pause:
+          pause();
+        // Esc no longer loses the fight on its own: it asks first.
+        case MenuAction.back:
+          pause(focusOnLeaving: true);
+        default:
+          break;
       }
       return;
     }
@@ -216,7 +307,9 @@ class ArenaPage extends SlidePage {
     required String title,
     required String message,
   }) {
-    if (_resolved) {
+    // Nothing on the board moves while paused, so nothing can decide the
+    // slide either: a blanked screen never turns into a result.
+    if (_resolved || isPaused) {
       return;
     }
     _resolved = true;
@@ -233,6 +326,9 @@ class ArenaPage extends SlidePage {
     floor.pause();
     moveStick.removeFromParent();
     aimStick.removeFromParent();
+    // The dialog carries End Show of its own.
+    _pauseChip.removeFromParent();
+    _endShowChip.removeFromParent();
     // The hint would otherwise outlive the controls it describes.
     _controlsHint.removeFromParent();
 

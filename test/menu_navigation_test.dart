@@ -90,7 +90,8 @@ void main() {
       expect(menuActionForButton(GamepadButton.a), MenuAction.activate);
       expect(menuActionForButton(GamepadButton.b), MenuAction.back);
       expect(menuActionForButton(GamepadButton.dpadLeft), MenuAction.left);
-      expect(menuActionForButton(GamepadButton.start), isNull);
+      expect(menuActionForButton(GamepadButton.start), MenuAction.pause);
+      expect(menuActionForButton(GamepadButton.x), isNull);
     });
 
     test('a stick push steps once, then repeats only when held', () {
@@ -304,14 +305,18 @@ void main() {
 
   group('slide show', () {
     testWithGame<PptxMonstersGame>(
-      'Esc ends the show mid-fight',
+      'Esc asks first, and a second Esc ends the show',
       PptxMonstersGame.new,
       (game) async {
-        await openArena(game);
+        final arena = await openArena(game);
 
         _press(game, LogicalKeyboardKey.escape);
         await game.ready();
+        expect(arena.isPaused, isTrue);
+        expect(game.router.currentRoute.name, Routes.slideShowFor(1));
 
+        _press(game, LogicalKeyboardKey.escape);
+        await game.ready();
         expect(game.router.currentRoute.name, Routes.normalView);
       },
     );
@@ -366,15 +371,16 @@ void main() {
     );
 
     testWithGame<PptxMonstersGame>(
-      'Android back leaves the show for the title slide',
+      'Android back pauses the fight rather than leaving it',
       PptxMonstersGame.new,
       (game) async {
-        await openArena(game);
+        final arena = await openArena(game);
 
         expect(game.goBack(), isTrue);
         await game.ready();
 
-        expect(game.router.currentRoute.name, Routes.normalView);
+        expect(arena.isPaused, isTrue);
+        expect(game.router.currentRoute.name, Routes.slideShowFor(1));
       },
     );
   });
@@ -415,7 +421,11 @@ void main() {
       expect(retried.level.number, 2);
       expect(retried, isNot(same(second)));
 
-      // B ends the show, and the title slide is where it lands.
+      // B asks before it ends the show, so it takes two: the first blanks the
+      // screen with End Show chosen, the second leaves.
+      press(GamepadButton.b);
+      await game.ready();
+      expect(retried.isPaused, isTrue);
       press(GamepadButton.b);
       await game.ready();
       expect(game.router.currentRoute.name, Routes.normalView);
