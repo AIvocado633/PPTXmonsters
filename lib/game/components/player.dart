@@ -156,6 +156,15 @@ class Player extends PositionComponent with KeyboardHandler, CollisionCallbacks 
     return true;
   }
 
+  /// Forgets any aim or fire key being held, so a key pressed while the fight
+  /// was frozen -- Space to choose Resume, say -- does not come out as a shot
+  /// the moment it starts again. Movement is left alone: a player still
+  /// holding a direction means to keep walking.
+  void stopFiring() {
+    _keyboardAim.setZero();
+    _spaceHeld = false;
+  }
+
   static void _sumKeys(
     Set<LogicalKeyboardKey> pressed,
     Map<LogicalKeyboardKey, (double, double)> axes, {

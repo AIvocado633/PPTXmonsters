@@ -4,7 +4,7 @@ import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart' show KeyEventResult;
+import 'package:flutter/widgets.dart' show AppLifecycleState, KeyEventResult;
 import 'package:gamepads/gamepads.dart';
 
 import 'deck.dart';
@@ -146,6 +146,23 @@ class PptxMonstersGame extends FlameGame
     final step = _stickRepeat.update(dt, gamepad.leftStick);
     if (step != null) {
       handleMenuAction(step);
+    }
+  }
+
+  /// Going away -- backgrounded on a phone, or the window losing focus on a
+  /// desktop -- pauses whatever is running. Flame stops its own loop too, but
+  /// only until the app is back; a fight has to stay paused after that.
+  @override
+  void lifecycleStateChange(AppLifecycleState state) {
+    super.lifecycleStateChange(state);
+    switch (state) {
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        currentPage?.onAppBackgrounded();
+      case AppLifecycleState.resumed:
+        break;
     }
   }
 
