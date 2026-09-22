@@ -8,6 +8,7 @@ import '../components/placeholder_frame.dart';
 import '../components/pptx_actor.dart';
 import '../components/ribbon_bar.dart';
 import '../components/status_bar.dart';
+import '../input/menu_input.dart';
 import '../levels.dart';
 import '../routes.dart';
 import '../slide/fly_in.dart';
@@ -56,6 +57,25 @@ class MainMenuPage extends SlidePage {
       _footer = _buildFooter(),
     ]);
   }
+
+  /// PowerPoint's own shortcuts: F5 shows from the beginning, Shift+F5 from
+  /// the current slide.
+  @override
+  void onMenuAction(MenuAction action) {
+    switch (action) {
+      case MenuAction.startFromBeginning:
+        game.router.pushNamed(Routes.slideShowFor(kLevels.first.number));
+      case MenuAction.startFromCurrent:
+        game.router.pushNamed(Routes.slideShowFor(game.deck.currentSlide));
+      default:
+        super.onMenuAction(action);
+    }
+  }
+
+  /// The title slide is the bottom of the deck: there is nothing to go back
+  /// to. (Android's back gesture leaves the app from here instead.)
+  @override
+  void onBack() {}
 
   StatusBar _buildStatusBar() => StatusBar(
     slideLabel: 'Slide ${game.deck.currentSlide} of ${kLevels.length}',

@@ -55,6 +55,24 @@ class StubStick extends ControlStick {
   Vector2 get relativeDelta => push;
 }
 
+/// A normalized controller event pressing, or releasing, [button].
+NormalizedGamepadEvent buttonEvent(GamepadButton button, {bool down = true}) {
+  final value = down ? 1.0 : 0.0;
+  return NormalizedGamepadEvent(
+    gamepadId: 'pad',
+    timestamp: 0,
+    value: value,
+    button: button,
+    rawEvent: GamepadEvent(
+      gamepadId: 'pad',
+      timestamp: 0,
+      type: KeyType.button,
+      key: button.name,
+      value: value,
+    ),
+  );
+}
+
 /// A normalized controller event moving one stick axis to [value].
 NormalizedGamepadEvent stickEvent(GamepadAxis axis, double value) {
   return NormalizedGamepadEvent(

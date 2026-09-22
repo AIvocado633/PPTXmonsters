@@ -47,41 +47,59 @@ class SelectionHandles extends PositionComponent {
 
   final double handleSize;
 
-  final Paint _fillPaint = Paint()..color = Palette.slide;
-  final Paint _strokePaint = Paint()
-    ..color = Palette.selection
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 1.6;
-  final Paint _outlinePaint = Paint()
-    ..color = Palette.selection.withValues(alpha: 0.45)
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 1.2;
-
   @override
   void render(Canvas canvas) {
-    canvas.drawRect(size.toRect(), _outlinePaint);
-    for (final dx in [0.0, 0.5, 1.0]) {
-      for (final dy in [0.0, 0.5, 1.0]) {
-        if (dx == 0.5 && dy == 0.5) {
-          continue;
-        }
-        _handle(canvas, Offset(width * dx, height * dy));
-      }
-    }
-    // The rotation handle, floating above the top edge.
-    final rotate = Offset(width / 2, -26);
-    canvas.drawLine(Offset(width / 2, 0), rotate, _outlinePaint);
-    canvas.drawCircle(rotate, handleSize / 2, _fillPaint);
-    canvas.drawCircle(rotate, handleSize / 2, _strokePaint);
-  }
-
-  void _handle(Canvas canvas, Offset centre) {
-    final rect = Rect.fromCenter(
-      center: centre,
-      width: handleSize,
-      height: handleSize,
+    drawSelection(
+      canvas,
+      size.toRect(),
+      handleSize: handleSize,
+      rotationHandle: true,
     );
-    canvas.drawRect(rect, _fillPaint);
-    canvas.drawRect(rect, _strokePaint);
+  }
+}
+
+final Paint _handleFillPaint = Paint()..color = Palette.slide;
+final Paint _handleStrokePaint = Paint()
+  ..color = Palette.selection
+  ..style = PaintingStyle.stroke
+  ..strokeWidth = 1.6;
+final Paint _selectionOutlinePaint = Paint()
+  ..color = Palette.selection.withValues(alpha: 0.45)
+  ..style = PaintingStyle.stroke
+  ..strokeWidth = 1.2;
+
+/// Draws PowerPoint's selection around [rect]: a thin outline with a resize
+/// handle at each corner and edge, and optionally the rotation handle above.
+///
+/// Also how keyboard and controller focus is shown, since choosing something
+/// on a slide means selecting it.
+void drawSelection(
+  Canvas canvas,
+  Rect rect, {
+  double handleSize = 11,
+  bool rotationHandle = false,
+}) {
+  canvas.drawRect(rect, _selectionOutlinePaint);
+  for (final dx in [0.0, 0.5, 1.0]) {
+    for (final dy in [0.0, 0.5, 1.0]) {
+      if (dx == 0.5 && dy == 0.5) {
+        continue;
+      }
+      final handle = Rect.fromCenter(
+        center: Offset(rect.left + rect.width * dx, rect.top + rect.height * dy),
+        width: handleSize,
+        height: handleSize,
+      );
+      canvas.drawRect(handle, _handleFillPaint);
+      canvas.drawRect(handle, _handleStrokePaint);
+    }
+  }
+  if (rotationHandle) {
+    // Floating above the top edge.
+    final top = Offset(rect.center.dx, rect.top);
+    final rotate = top.translate(0, -26);
+    canvas.drawLine(top, rotate, _selectionOutlinePaint);
+    canvas.drawCircle(rotate, handleSize / 2, _handleFillPaint);
+    canvas.drawCircle(rotate, handleSize / 2, _handleStrokePaint);
   }
 }

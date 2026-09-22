@@ -11,6 +11,7 @@ import '../deck.dart';
 import '../levels.dart';
 import '../routes.dart';
 import '../slide/fly_in.dart';
+import '../slide/focusable.dart';
 import '../slide/slide_metrics.dart';
 import '../slide/slide_page.dart';
 import '../theme/palette.dart';
@@ -80,6 +81,21 @@ class SlideSorterPage extends SlidePage {
     );
   }
 
+  /// The thumbnails are a grid, so arrows move across it by position.
+  @override
+  bool get spatialFocus => true;
+
+  /// Focus starts on the slide the player is up to, not on the way out.
+  @override
+  Focusable? get initialFocus {
+    final current = game.deck.currentSlide;
+    return children
+            .whereType<SlideThumbnail>()
+            .where((thumbnail) => thumbnail.level.number == current)
+            .firstOrNull ??
+        super.initialFocus;
+  }
+
   /// Winning a slide opened from here marks it beaten and unlocks the next.
   @override
   void onProgressChanged() {
@@ -98,8 +114,11 @@ class SlideSorterPage extends SlidePage {
 ///  * locked: greyed out, with a bolt;
 ///  * not built yet: a hidden slide, faded, with its number struck through.
 ///    Unlike a lock, that does not suggest it could be earned.
+///
+/// Every thumbnail can take focus, locked or not, the way any slide in the
+/// sorter can be selected; only playable ones open.
 class SlideThumbnail extends PositionComponent
-    with TapCallbacks, HoverCallbacks {
+    with TapCallbacks, HoverCallbacks, Focusable {
   SlideThumbnail({
     required this.level,
     required SlideState state,
@@ -219,14 +238,26 @@ class SlideThumbnail extends PositionComponent
         break;
     }
 
-    _borderPaint.color = isPlayable && isHovered
-        ? Palette.brand
-        : Palette.ribbonEdge;
-    canvas.drawRect(rect, _borderPaint);
+    // Selected the way PowerPoint's sorter selects a slide: a thick border in
+    // the brand colour, rather than the resize handles used for shapes.
+    if (isHighlighted) {
+      _borderPaint
+        ..color = Palette.brand
+        ..strokeWidth = 5;
+      canvas.drawRect(rect.inflate(1.5), _borderPaint);
+    } else {
+      _borderPaint
+        ..color = Palette.ribbonEdge
+        ..strokeWidth = 2;
+      canvas.drawRect(rect, _borderPaint);
+    }
   }
 
   @override
   void onTapUp(TapUpEvent event) => select();
+
+  @override
+  void activate() => select();
 
   /// Opens the slide, if it can be opened.
   void select() {

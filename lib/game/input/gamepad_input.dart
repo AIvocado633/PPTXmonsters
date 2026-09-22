@@ -3,7 +3,8 @@ import 'dart:math' as math;
 import 'package:flame/components.dart';
 import 'package:gamepads/gamepads.dart';
 
-/// The latest stick positions from a connected controller, in screen terms.
+/// The latest stick positions and buttons from a connected controller, in
+/// screen terms.
 ///
 /// Fed from `Gamepads.normalizedEvents`, which already maps every platform's
 /// raw key names onto a standard Xbox-style layout, so the left stick is the
@@ -39,9 +40,39 @@ class GamepadInput {
   Vector2 get aim =>
       _right.length < deadzone ? Vector2.zero() : _right.normalized();
 
-  /// Folds one normalized event into the current stick state. Buttons and
-  /// triggers are ignored for now.
+  /// The left stick as it is, with no deadzone: what menus read to step
+  /// through focus, with their own, larger threshold.
+  Vector2 get leftStick => _left.clone();
+
+  final Set<GamepadButton> _held = {};
+  final List<GamepadButton> _presses = [];
+
+  /// Whether [button] is down right now.
+  bool isHeld(GamepadButton button) => _held.contains(button);
+
+  /// The buttons pressed since the last call, oldest first. A button held
+  /// down counts once, however long it is held.
+  List<GamepadButton> takePresses() {
+    final presses = List.of(_presses);
+    _presses.clear();
+    return presses;
+  }
+
+  /// Folds one normalized event into the current stick and button state.
+  /// Triggers are ignored for now.
   void handle(NormalizedGamepadEvent event) {
+    final button = event.button;
+    if (button != null) {
+      // Analogue buttons report how far they are pressed; past halfway is down.
+      if (event.value > 0.5) {
+        if (_held.add(button)) {
+          _presses.add(button);
+        }
+      } else {
+        _held.remove(button);
+      }
+      return;
+    }
     switch (event.axis) {
       case GamepadAxis.leftStickX:
         _left.x = event.value;
