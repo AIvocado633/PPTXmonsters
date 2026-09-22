@@ -6,6 +6,7 @@ import 'package:flame/input.dart';
 import 'package:flutter/foundation.dart';
 import 'package:gamepads/gamepads.dart';
 
+import 'deck.dart';
 import 'input/gamepad_input.dart';
 
 import 'pages/arena_page.dart';
@@ -31,8 +32,12 @@ class PptxMonstersGame extends FlameGame
   PptxMonstersGame({
     Stream<NormalizedGamepadEvent>? gamepadEvents,
     SaveStore? saveStore,
+    this.unlockAll = kUnlockAll,
   }) : _gamepadEvents = gamepadEvents,
        _saveStore = saveStore ?? InMemorySaveStore();
+
+  /// Opens every built slide, whatever has been won. See [kUnlockAll].
+  final bool unlockAll;
 
   /// Controller events to follow. The app passes the real platform stream;
   /// tests leave it null, so building a game never touches a platform channel.
@@ -45,6 +50,9 @@ class PptxMonstersGame extends FlameGame
 
   /// What the player has done so far, loaded before the first page is shown.
   late final SaveFile save;
+
+  /// Which slides can be opened, as of the latest save.
+  Deck get deck => Deck(progress: save.data.progress, unlockAll: unlockAll);
 
   /// The connected controller's sticks, shared by every page.
   final GamepadInput gamepad = GamepadInput();

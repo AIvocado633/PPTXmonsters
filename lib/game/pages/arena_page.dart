@@ -171,6 +171,9 @@ class ArenaPage extends SlidePage {
       // Saved the moment it is won, so leaving from the dialog keeps it.
       unawaited(game.save.recordWin(level.number));
     }
+    // Only after a win, and only onto a slide that has been built: beating
+    // the last built slide ends on the normal dialog.
+    final next = won ? game.deck.nextAfter(level.number) : null;
 
     // Freeze the board rather than tearing it down, so the last moment of the
     // fight stays on screen behind the dialog.
@@ -186,17 +189,18 @@ class ArenaPage extends SlidePage {
         title: title,
         message: message,
         won: won,
-        onRetry: _retry,
+        onRetry: () => _replaceWith(level.number),
         onLeave: _leave,
+        onNext: next == null ? null : () => _replaceWith(next),
       ),
     );
   }
 
   /// The route does not maintain state, so popping drops this page and pushing
-  /// builds a brand new fight.
-  void _retry() {
+  /// builds a brand new fight -- the same slide again, or the next one.
+  void _replaceWith(int slide) {
     game.router.pop();
-    game.router.pushNamed(Routes.slideShowFor(level.number));
+    game.router.pushNamed(Routes.slideShowFor(slide));
   }
 
   void _leave() => game.router.pop();
