@@ -9,9 +9,11 @@ import '../components/chip_button.dart';
 import '../components/control_stick.dart';
 import '../components/player.dart';
 import '../components/result_panel.dart';
+import '../input/menu_input.dart';
 import '../levels.dart';
 import '../routes.dart';
 import '../slide/fly_in.dart';
+import '../slide/focusable.dart';
 import '../slide/slide_metrics.dart';
 import '../slide/slide_page.dart';
 import '../theme/palette.dart';
@@ -138,9 +140,60 @@ class ArenaPage extends SlidePage {
 
   String get _bossReadoutText => '${level.boss}: ${boss.readout}';
 
+  /// How long the result dialog ignores Enter, Space and A, so a player still
+  /// hammering fire as the boss goes down does not press a button unseen.
+  static const double resultInputDelay = 0.5;
+
+  ResultPanel? _panel;
+  double _resolvedFor = 0;
+  bool _dialogFocused = false;
+
+  /// While fighting, nothing on the slide takes focus: the arrows aim. Once
+  /// the slide is decided, focus moves between the dialog's buttons only.
+  @override
+  List<Focusable> get focusables {
+    final panel = _panel;
+    if (panel == null) {
+      return const [];
+    }
+    return panel.children.whereType<ChipButton>().toList();
+  }
+
+  @override
+  void onMenuAction(MenuAction action) {
+    if (!_resolved) {
+      // Esc and B end the show mid-fight; #10 turns this into a pause menu.
+      if (action == MenuAction.back) {
+        _leave();
+      }
+      return;
+    }
+    if (action == MenuAction.activate && _resolvedFor < resultInputDelay) {
+      return;
+    }
+    super.onMenuAction(action);
+  }
+
+  /// Back from the result dialog ends the show, as End Show does.
+  @override
+  void onBack() => _leave();
+
   @override
   void update(double dt) {
     super.update(dt);
+    final panel = _panel;
+    if (panel != null) {
+      _resolvedFor += dt;
+      // The dialog's buttons exist once it has loaded. Its primary action
+      // starts selected, so a controller player can see what A will do.
+      if (!_dialogFocused) {
+        final buttons = focusables;
+        if (buttons.isNotEmpty) {
+          _dialogFocused = true;
+          showFocusOn(buttons.first);
+        }
+      }
+    }
     // Only re-lay out a readout when the value it shows actually moves.
     if (_shownHealth != player.health.current) {
       _shownHealth = player.health.current;
@@ -184,7 +237,7 @@ class ArenaPage extends SlidePage {
     _controlsHint.removeFromParent();
 
     add(
-      ResultPanel(
+      _panel = ResultPanel(
         position: Vector2(kSlideWidth / 2, kSlideHeight / 2),
         title: title,
         message: message,

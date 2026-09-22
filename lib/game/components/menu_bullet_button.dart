@@ -4,8 +4,10 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 
+import '../slide/focusable.dart';
 import '../theme/palette.dart';
 import '../theme/slide_text.dart';
+import 'placeholder_frame.dart';
 import 'slide_painting.dart';
 
 /// A menu entry drawn as a bullet point on a content placeholder.
@@ -13,7 +15,7 @@ import 'slide_painting.dart';
 /// The whole row is the hit target, which keeps it comfortable to tap on a
 /// phone while still looking like an ordinary line of slide text.
 class MenuBulletButton extends PositionComponent
-    with TapCallbacks, HoverCallbacks {
+    with TapCallbacks, HoverCallbacks, Focusable {
   MenuBulletButton({
     required this.label,
     required this.onSelected,
@@ -73,7 +75,17 @@ class MenuBulletButton extends PositionComponent
     await add(_content);
   }
 
-  bool get _isActive => enabled && (isHovered || _pressed);
+  @override
+  bool get canFocus => enabled;
+
+  @override
+  void activate() {
+    if (enabled) {
+      onSelected();
+    }
+  }
+
+  bool get _isActive => enabled && (isHighlighted || _pressed);
 
   @override
   void update(double dt) {
@@ -96,6 +108,9 @@ class MenuBulletButton extends PositionComponent
       RRect.fromRectAndRadius(size.toRect(), const Radius.circular(6)),
       _highlightPaint,
     );
+    if (isHighlighted) {
+      drawSelection(canvas, size.toRect().inflate(3), handleSize: 9);
+    }
   }
 
   @override

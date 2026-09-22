@@ -1,13 +1,15 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' show KeyEventResult;
 import 'package:gamepads/gamepads.dart';
 
 import 'deck.dart';
 import 'input/gamepad_input.dart';
+import 'input/menu_input.dart';
 
 import 'pages/arena_page.dart';
 import 'pages/design_ideas_page.dart';
@@ -17,6 +19,7 @@ import 'levels.dart';
 import 'routes.dart';
 import 'save/save_file.dart';
 import 'save/save_store.dart';
+import 'slide/slide_page.dart';
 import 'theme/palette.dart';
 
 /// Root of the game.
@@ -90,6 +93,60 @@ class PptxMonstersGame extends FlameGame
         },
       ),
     );
+  }
+
+  final StickRepeat _stickRepeat = StickRepeat();
+
+  /// The page on top, which is the one menu input goes to. Pages underneath
+  /// stay mounted, so they must not hear it.
+  SlidePage? get currentPage =>
+      router.currentRoute.children.whereType<SlidePage>().firstOrNull;
+
+  /// Sends [action] to the page on top. Public so tests can drive menus the
+  /// way a player would, without synthesising key events.
+  void handleMenuAction(MenuAction action) => currentPage?.onMenuAction(action);
+
+  /// Android's back gesture. Returns false on the title slide, where back
+  /// should leave the app; anywhere else it goes back within the game.
+  bool goBack() {
+    if (!isLoaded || router.currentRoute.name == Routes.normalView) {
+      return false;
+    }
+    handleMenuAction(MenuAction.back);
+    return true;
+  }
+
+  @override
+  KeyEventResult onKeyEvent(
+    KeyEvent event,
+    Set<LogicalKeyboardKey> keysPressed,
+  ) {
+    // Components first: the player reads WASD and the arrows mid-fight.
+    final result = super.onKeyEvent(event, keysPressed);
+    final action = menuActionForKey(event, keysPressed);
+    if (action == null) {
+      return result;
+    }
+    handleMenuAction(action);
+    return KeyEventResult.handled;
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (!isLoaded) {
+      return;
+    }
+    for (final button in gamepad.takePresses()) {
+      final action = menuActionForButton(button);
+      if (action != null) {
+        handleMenuAction(action);
+      }
+    }
+    final step = _stickRepeat.update(dt, gamepad.leftStick);
+    if (step != null) {
+      handleMenuAction(step);
+    }
   }
 
   @override

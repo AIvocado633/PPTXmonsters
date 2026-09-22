@@ -47,12 +47,20 @@ device. Any slide you have opened can be replayed.
 Twin-stick: one input moves, the other aims, and pushing the aim in any
 direction fires that way immediately — there is no fire button.
 
-|          | Touch             | Keyboard   | Controller  |
-| -------- | ----------------- | ---------- | ----------- |
-| **Move** | left thumb stick  | WASD       | left stick  |
-| **Aim**  | right thumb stick | arrow keys | right stick |
+|           | Touch             | Keyboard                         | Controller          |
+| --------- | ----------------- | -------------------------------- | ------------------- |
+| **Move**  | left thumb stick  | WASD                             | left stick          |
+| **Aim**   | right thumb stick | arrow keys                       | right stick         |
+| **Menus** | tap               | arrows, Enter or Space, Esc      | D-pad or left stick, A, B |
 
-All three work at once, so you can pick up a controller mid-fight. Space still
+All three work at once, so you can pick up a controller mid-fight.
+
+Menus work without touching the screen. Arrows, the D-pad or the left stick
+move focus, drawn as a PowerPoint selection; the slide sorter moves across its
+grid. Enter, Space or A chooses, and Esc or B goes back. On the start menu,
+F5 starts the show from the beginning and Shift+F5 from the current slide, as
+in PowerPoint. Mid-fight, Esc or B ends the show. On Android the back gesture
+goes back a step, and only leaves the app from the title slide. Space still
 fires along the way you are walking, for anyone who would rather not aim.
 Controllers come through the Flame team's
 [`gamepads`](https://pub.dev/packages/gamepads) package, whose normalized
@@ -162,6 +170,8 @@ lib/
       slide_metrics.dart     The 1280x720 design canvas and its margins
       slide_page.dart        Base page: scales and letterboxes the slide
       fly_in.dart            PowerPoint's entrance animation, as an extension
+      focusable.dart         What keyboard and controller focus can land on
+    input/                   Controller state, and keys and buttons as menu actions
     pages/                   One file per screen
     components/              Ribbon, status bar, placeholders, buttons, actors
     art/pptx_art.dart        Loads PNG frames exported from PowerPoint

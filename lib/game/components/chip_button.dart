@@ -3,12 +3,15 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 
+import '../slide/focusable.dart';
 import '../theme/palette.dart';
 import '../theme/slide_text.dart';
+import 'placeholder_frame.dart';
 
 /// A compact pill button, used for secondary actions such as going back to
 /// normal view. Styled after the buttons in PowerPoint's task panes.
-class ChipButton extends PositionComponent with TapCallbacks, HoverCallbacks {
+class ChipButton extends PositionComponent
+    with TapCallbacks, HoverCallbacks, Focusable {
   ChipButton({
     required this.label,
     required this.onSelected,
@@ -53,10 +56,10 @@ class ChipButton extends PositionComponent with TapCallbacks, HoverCallbacks {
     if (filled) {
       _fillPaint.color = _pressed
           ? Palette.brandDark
-          : (isHovered ? Palette.brandLight : Palette.brand);
+          : (isHighlighted ? Palette.brandLight : Palette.brand);
       canvas.drawRRect(rrect, _fillPaint);
     } else {
-      if (isHovered || _pressed) {
+      if (isHighlighted || _pressed) {
         _fillPaint.color = _pressed
             ? Palette.brandWashStrong
             : Palette.brandWash;
@@ -65,7 +68,13 @@ class ChipButton extends PositionComponent with TapCallbacks, HoverCallbacks {
       _strokePaint.color = Palette.brand;
       canvas.drawRRect(rrect, _strokePaint);
     }
+    if (isHighlighted) {
+      drawSelection(canvas, size.toRect().inflate(5), handleSize: 9);
+    }
   }
+
+  @override
+  void activate() => onSelected();
 
   @override
   void onTapDown(TapDownEvent event) => _pressed = true;

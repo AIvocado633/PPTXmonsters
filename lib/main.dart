@@ -2,6 +2,7 @@ import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gamepads/gamepads.dart';
 
 import 'game/pptx_monsters_game.dart';
@@ -22,8 +23,20 @@ Future<void> main() async {
   runApp(const PptxMonstersApp());
 }
 
-class PptxMonstersApp extends StatelessWidget {
+class PptxMonstersApp extends StatefulWidget {
   const PptxMonstersApp({super.key});
+
+  @override
+  State<PptxMonstersApp> createState() => _PptxMonstersAppState();
+}
+
+class _PptxMonstersAppState extends State<PptxMonstersApp> {
+  /// Kept here rather than built by the `GameWidget`, so Android's back
+  /// gesture can be handed to it.
+  late final PptxMonstersGame _game = PptxMonstersGame(
+    gamepadEvents: Gamepads.normalizedEvents,
+    saveStore: SharedPreferencesSaveStore(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -38,13 +51,19 @@ class PptxMonstersApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Palette.workspace,
       ),
-      home: Scaffold(
-        backgroundColor: Palette.workspace,
-        body: GameWidget.controlled(
-          gameFactory: () => PptxMonstersGame(
-            gamepadEvents: Gamepads.normalizedEvents,
-            saveStore: SharedPreferencesSaveStore(),
-          ),
+      // The navigator has one route, the game, so an unhandled back gesture
+      // would close the app from anywhere -- mid-fight included. Back goes to
+      // the game instead, and only leaves the app from the title slide.
+      home: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop && !_game.goBack()) {
+            SystemNavigator.pop();
+          }
+        },
+        child: Scaffold(
+          backgroundColor: Palette.workspace,
+          body: GameWidget(game: _game),
         ),
       ),
     );
