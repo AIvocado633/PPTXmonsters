@@ -312,6 +312,12 @@ class ArenaPage extends SlidePage {
     if (_resolved || isPaused) {
       return;
     }
+    // The player's exit animation plays before the slide is called lost, and
+    // the fight runs on underneath it. A boss finished off during those last
+    // moments does not steal the win.
+    if (won && player.health.isDead) {
+      return;
+    }
     _resolved = true;
     if (won) {
       // Saved the moment it is won, so leaving from the dialog keeps it.

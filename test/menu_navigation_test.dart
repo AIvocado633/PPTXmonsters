@@ -3,6 +3,7 @@ import 'package:flame_test/flame_test.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gamepads/gamepads.dart';
+import 'package:pptx_monsters/game/components/player.dart';
 import 'package:pptx_monsters/game/components/chip_button.dart';
 import 'package:pptx_monsters/game/components/menu_bullet_button.dart';
 import 'package:pptx_monsters/game/components/result_panel.dart';
@@ -356,7 +357,7 @@ void main() {
       (game) async {
         final arena = await openArena(game);
         arena.player.takeHit(arena.player.health.max);
-        advance(game, 1 / 60);
+        advance(game, Player.exitDuration + 0.1);
         await game.ready();
         expect(arena.isResolved, isTrue);
 
@@ -413,7 +414,7 @@ void main() {
 
       // Lose, and retry: on a loss the primary action is Retry Slide.
       second.player.takeHit(second.player.health.max);
-      advance(game, ArenaPage.resultInputDelay + 0.1);
+      advance(game, Player.exitDuration + ArenaPage.resultInputDelay + 0.1);
       await game.ready();
       press(GamepadButton.a);
       await game.ready();

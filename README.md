@@ -113,6 +113,27 @@ It fights back by throwing its connector arrows at you.
 Where AutoFit is one target that gets smaller, SmartArt is many targets that
 keep moving: same controls, a completely different problem.
 
+### How a hit feels
+
+A hit is never just a number going down. Whatever was hit flashes and squashes,
+the board shakes when the player takes one, and what the hit cost floats off it
+in that side's own units — `−6 pt` off AutoFit, `−1 shape` off SmartArt, `−13%`
+off the player. Health is never a bar in this game, so the numbers say what the
+readouts say.
+
+After a hit the player is briefly untouchable, blinking, so two shots arriving
+together cost one size rather than two. Both bosses fire slower than that
+window, so it only ever swallows shots that arrive at once; a test holds them
+to that. Bosses get no such mercy: every bullet point in a stream counts.
+
+Losing plays a PowerPoint *exit* animation — Shrink & Turn — and the result
+dialog waits for it to finish. A boss beaten during those last moments does
+not steal the win.
+
+Every flash, squash and shake goes through `lib/game/combat/impact.dart`, so
+Reduce Motion (#13) can turn them all off from one switch. Damage numbers stay:
+they are what happened, not decoration.
+
 ## Running it
 
 ```bash
@@ -186,6 +207,7 @@ lib/
     pptx_monsters_game.dart  FlameGame + RouterComponent; one route per screen
     routes.dart              Route names
     levels.dart              The six slides, and the boss each one builds
+    combat/impact.dart       Hit flashes, shakes and damage numbers, in one place
     deck.dart                Which slides are open, given what has been won
     slide/
       slide_metrics.dart     The 1280x720 design canvas and its margins

@@ -2,6 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pptx_monsters/game/components/player.dart';
 import 'package:pptx_monsters/game/combat/autofit_boss.dart';
 import 'package:pptx_monsters/game/combat/health.dart';
 import 'package:pptx_monsters/game/combat/projectiles.dart';
@@ -204,12 +205,20 @@ void main() {
     );
 
     testWithGame<PptxMonstersGame>(
-      'being shrunk away loses the slide',
+      'being shrunk away loses the slide, once the exit animation ends',
       PptxMonstersGame.new,
       (game) async {
         final arena = await openArena(game);
 
         arena.player.takeHit(arena.player.health.max);
+        await game.ready();
+        expect(
+          arena.isResolved,
+          isFalse,
+          reason: 'the player leaves the slide first',
+        );
+
+        advance(game, Player.exitDuration + 0.1);
         await game.ready();
 
         expect(arena.isResolved, isTrue);

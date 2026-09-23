@@ -12,6 +12,7 @@ import '../components/pptx_actor.dart';
 import '../theme/palette.dart';
 import 'boss.dart';
 import 'health.dart';
+import 'impact.dart';
 import 'projectiles.dart';
 
 /// The first boss: the feature that shrinks your text because it did not fit.
@@ -31,10 +32,23 @@ class AutoFitBoss extends Boss {
   /// The point sizes AutoFit steps through, longest-standing first. One step
   /// per hit, so the ladder's length is the boss's hit points.
   static const List<int> pointLadder = [
-    54, 48, 44, 40, 36, 32, 28, 24, 20, 18, 16, 14,
+    54,
+    48,
+    44,
+    40,
+    36,
+    32,
+    28,
+    24,
+    20,
+    18,
+    16,
+    14,
   ];
 
-  static const double _fireInterval = 1.5;
+  /// Seconds between thrown resize handles. Longer than the player's mercy
+  /// window, so a single stream of shots always lands.
+  static const double fireInterval = 1.5;
   static const double _patrolSpeed = 0.7;
   static const double _patrolReach = 150;
 
@@ -62,6 +76,7 @@ class AutoFitBoss extends Boss {
   late final double _patrolOrigin = position.x;
 
   late final TextComponent _label;
+  late final PptxActor _actor;
 
   @override
   Future<void> onLoad() async {
@@ -71,7 +86,7 @@ class AutoFitBoss extends Boss {
         size: size.clone(),
         strokeColor: Palette.autoFit,
       ),
-      PptxActor(
+      _actor = PptxActor(
         artPrefix: 'autofit_idle_',
         tint: Palette.autoFit,
         position: Vector2(width / 2, 68),
@@ -111,7 +126,7 @@ class AutoFitBoss extends Boss {
     position.x = _patrolOrigin + math.sin(_patrolPhase) * _patrolReach;
 
     _sinceLastShot += dt;
-    if (_sinceLastShot >= _fireInterval) {
+    if (_sinceLastShot >= fireInterval) {
       _sinceLastShot = 0;
       _throwHandle();
     }
@@ -143,17 +158,30 @@ class AutoFitBoss extends Boss {
     takeHit(other.damage);
   }
 
-  /// Steps the boss down the ladder.
+  /// Steps the boss down the ladder. No mercy window: every bullet point in a
+  /// stream should count.
   @override
   void takeHit([int amount = 1]) {
     if (_defeated) {
       return;
     }
+    final before = pointSize;
     health.damage(amount);
     scale = Vector2.all(health.scale);
     _label
       ..text = '$pointSize pt'
       ..textRenderer = _labelRenderer(pointSize);
+
+    // What the hit cost, in AutoFit's own units: point sizes off the ladder.
+    Impact.hit(_actor);
+    final floor = parent;
+    if (floor != null && before > pointSize) {
+      Impact.damage(
+        floor,
+        position - Vector2(0, scaledSize.y / 2),
+        '−${before - pointSize} pt',
+      );
+    }
 
     if (health.isDead) {
       _defeated = true;

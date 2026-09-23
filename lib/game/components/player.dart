@@ -1,10 +1,14 @@
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
+import 'package:flutter/animation.dart';
 import 'package:flutter/services.dart';
 
 import '../combat/health.dart';
+import '../combat/impact.dart';
 import '../combat/projectiles.dart';
 import '../input/gamepad_input.dart';
 import '../theme/palette.dart';
@@ -88,6 +92,21 @@ class Player extends PositionComponent with KeyboardHandler, CollisionCallbacks 
   /// before it counts as aiming -- and so as firing. Enough to ignore a thumb
   /// merely resting on the stick, small enough that any deliberate push shoots.
   static const double aimThreshold = 0.1;
+
+  /// How long the player cannot be hit again after a hit lands. Long enough
+  /// that two shots arriving together cost one size rather than two.
+  static const double invulnerableFor = 0.6;
+
+  /// One blink is on then off, so this is 2.5 flashes a second -- inside the
+  /// three-a-second photosensitivity guideline.
+  static const double blinkPeriod = 0.4;
+
+  /// How long the player's exit animation runs before the slide is lost.
+  static const double exitDuration = 0.55;
+
+  /// Whether a hit would be shrugged off right now.
+  bool get isInvulnerable => _invulnerable > 0;
+  double _invulnerable = 0;
 
   static const double _fireCooldown = 0.32;
 
@@ -183,9 +202,27 @@ class Player extends PositionComponent with KeyboardHandler, CollisionCallbacks 
   @override
   void update(double dt) {
     super.update(dt);
+    if (_invulnerable > 0) {
+      _invulnerable = math.max(0, _invulnerable - dt);
+    }
     _readAim();
     _move(dt);
     _shoot(dt);
+  }
+
+  /// Blinks while invulnerable, which is the only sign that a hit would not
+  /// land right now.
+  @override
+  void renderTree(Canvas canvas) {
+    if (isInvulnerable && _blinkedOut) {
+      return;
+    }
+    super.renderTree(canvas);
+  }
+
+  bool get _blinkedOut {
+    final elapsed = invulnerableFor - _invulnerable;
+    return (elapsed / (blinkPeriod / 2)).floor().isOdd;
   }
 
   void _readAim() {
@@ -267,7 +304,13 @@ class Player extends PositionComponent with KeyboardHandler, CollisionCallbacks 
       return;
     }
     other.removeFromParent();
+    // The window is opened here rather than in [takeHit], so a fight can still
+    // be driven hit by hit from a test.
+    if (isInvulnerable) {
+      return;
+    }
     takeHit(other.damage);
+    _invulnerable = invulnerableFor;
   }
 
   /// Shrinks the player by [amount] hit points.
@@ -275,11 +318,46 @@ class Player extends PositionComponent with KeyboardHandler, CollisionCallbacks 
     if (health.isDead) {
       return;
     }
+    final before = health.fraction;
     health.damage(amount);
     scale = Vector2.all(health.scale);
-    if (health.isDead) {
-      onDefeated?.call();
+
+    Impact.hit(_art);
+    final floor = parent;
+    if (floor is ArenaFloor) {
+      Impact.shake(floor);
+      final lost = ((before - health.fraction) * 100).round();
+      if (lost > 0) {
+        Impact.damage(
+          floor,
+          position - Vector2(0, scaledSize.y / 2),
+          '−$lost%',
+          colour: Palette.brandLight,
+        );
+      }
     }
+
+    if (health.isDead) {
+      _playExit();
+    }
+  }
+
+  /// PowerPoint's Shrink & Turn, as an exit: the player spins away to nothing
+  /// before the slide is called lost. The Animation Pane will have something
+  /// to say about this in #19.
+  void _playExit() {
+    _invulnerable = 0;
+    addAll([
+      ScaleEffect.to(
+        Vector2.zero(),
+        EffectController(duration: exitDuration, curve: Curves.easeInBack),
+      ),
+      RotateEffect.by(
+        math.pi * 1.5,
+        EffectController(duration: exitDuration),
+        onComplete: () => onDefeated?.call(),
+      ),
+    ]);
   }
 
   void _face(Vector2 direction) {
